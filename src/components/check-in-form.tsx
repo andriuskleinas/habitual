@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import { CheckCircle2, Loader2, Pencil } from "lucide-react";
 import { logCheckIn, type LogCheckInState } from "@/app/challenges/actions";
+import { celebrateCheckIn } from "@/lib/confetti";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,10 +36,13 @@ export function CheckInForm({
   challengeId,
   dailyTarget,
   today,
+  streak,
 }: {
   challengeId: string;
   dailyTarget: number;
   today: TodayCheckIn | null;
+  /** Streak as of this render — used to size the milestone confetti burst. */
+  streak: number;
 }) {
   const [state, formAction] = useActionState<LogCheckInState, FormData>(
     logCheckIn,
@@ -46,6 +50,16 @@ export function CheckInForm({
   );
   const doneToday = today !== null;
   const tracksNumber = dailyTarget > 1;
+
+  // Fire the celebration whenever a check-in succeeds. `state` is a fresh object
+  // per action, so this runs once per successful log (never on mount, since the
+  // initial state has no `ok`). Logging a *new* day advances the streak by one;
+  // re-logging the same day keeps it, so project accordingly for milestones.
+  useEffect(() => {
+    if (state.ok) {
+      void celebrateCheckIn(doneToday ? streak : streak + 1);
+    }
+  }, [state, doneToday, streak]);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">

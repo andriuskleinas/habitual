@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, CalendarDays, Flame, HandCoins, Trophy } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  CheckCircle2,
+  Flame,
+  HandCoins,
+  Trophy,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   cadenceLabel,
@@ -13,7 +20,6 @@ import {
 import { CheckInForm } from "@/components/check-in-form";
 import { ShareInvite } from "@/components/share-invite";
 import { ReactionsFeed, type ReactionItem } from "@/components/reactions-feed";
-import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Challenge" };
 
@@ -127,52 +133,60 @@ export default async function ChallengeDetailPage({
         </section>
       )}
 
-      {/* Stats */}
-      <section className="mt-6 grid grid-cols-2 gap-3">
-        <Card size="sm">
-          <CardContent className="flex flex-col gap-0.5">
-            <div className="text-primary flex items-center gap-1">
-              <Flame className="size-4" />
-              <span className="text-2xl font-bold tabular-nums">{streak}</span>
+      {/* Streak hero — the payoff number */}
+      <section className="mt-6 flex flex-col gap-3">
+        <div className="ring-primary/15 relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/12 via-primary/5 to-transparent px-5 py-5 ring-1">
+          <div className="flex items-center gap-4">
+            <div className="bg-primary/15 text-primary flex size-14 shrink-0 items-center justify-center rounded-2xl">
+              <Flame className="size-7" />
             </div>
-            <p className="text-muted-foreground text-xs">
-              day streak{best > 0 ? ` · best ${best}` : ""}
-            </p>
-          </CardContent>
-        </Card>
-        <Card size="sm">
-          <CardContent className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-1">
-              <Trophy className="text-primary size-4" />
-              <span className="text-2xl font-bold tabular-nums">
-                {progress.completedDays}
-              </span>
-              {progress.totalDays && (
-                <span className="text-muted-foreground text-sm">
-                  /{progress.totalDays}
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-primary text-4xl leading-none font-bold tabular-nums">
+                  {streak}
                 </span>
-              )}
+                <span className="text-muted-foreground text-sm">
+                  day{streak === 1 ? "" : "s"}
+                </span>
+              </div>
+              <p className="text-muted-foreground mt-1 text-xs">
+                current streak{best > 0 ? ` · best ${best}` : ""}
+              </p>
             </div>
-            <p className="text-muted-foreground text-xs">
-              days done
-              {progress.daysRemaining !== null
-                ? ` · ${progress.daysRemaining} left`
-                : ""}
-            </p>
-          </CardContent>
-        </Card>
-      </section>
-
-      {progress.percent !== null && (
-        <section className="mt-3">
-          <div className="bg-muted h-2.5 w-full overflow-hidden rounded-full">
-            <div
-              className="bg-primary h-full rounded-full transition-all"
-              style={{ width: `${progress.percent}%` }}
-            />
+            {todayRow && (
+              <span className="text-primary ring-primary/20 ml-auto inline-flex items-center gap-1 self-start rounded-full bg-background/70 px-2.5 py-1 text-xs font-medium ring-1">
+                <CheckCircle2 className="size-3.5" />
+                Today
+              </span>
+            )}
           </div>
-        </section>
-      )}
+        </div>
+
+        {progress.percent !== null && (
+          <div className="ring-foreground/10 flex flex-col gap-2.5 rounded-2xl px-5 py-4 ring-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Trophy className="text-primary size-4" />
+                <span className="text-sm font-semibold tabular-nums">
+                  {progress.percent}% complete
+                </span>
+              </div>
+              <span className="text-muted-foreground text-xs tabular-nums">
+                {progress.completedDays}/{progress.totalDays} days
+                {progress.daysRemaining !== null
+                  ? ` · ${progress.daysRemaining} left`
+                  : ""}
+              </span>
+            </div>
+            <div className="bg-muted h-2.5 w-full overflow-hidden rounded-full">
+              <div
+                className="bg-primary h-full rounded-full transition-all"
+                style={{ width: `${progress.percent}%` }}
+              />
+            </div>
+          </div>
+        )}
+      </section>
 
       {/* Today's check-in (owner only) */}
       {isOwner ? (
@@ -186,6 +200,7 @@ export default async function ChallengeDetailPage({
             today={
               todayRow ? { value: todayRow.value, note: todayRow.note } : null
             }
+            streak={streak}
           />
 
           {inviteToken && (
