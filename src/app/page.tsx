@@ -71,7 +71,7 @@ export default function Home() {
       </section>
 
       <footer className="text-muted-foreground mt-auto pt-16 text-center text-xs">
-        Habitual · Wave 1 — data layer &amp; auth
+        Habitual · habits stick when someone&apos;s watching
       </footer>
     </main>
   );
