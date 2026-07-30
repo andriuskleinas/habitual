@@ -66,6 +66,12 @@ export async function createChallenge(
     return { error: error?.message ?? "Couldn't create the challenge. Try again." };
   }
 
+  // Every challenge ships with a shareable invite from birth: one pending
+  // buddies row whose invite_token (auto-generated) is the sharable link.
+  // A failure here shouldn't block the create — the detail page can heal a
+  // missing invite later — so we don't surface the error.
+  await supabase.from("buddies").insert({ challenge_id: data.id, status: "pending" });
+
   revalidatePath("/dashboard");
   redirect(`/challenges/${data.id}`);
 }
