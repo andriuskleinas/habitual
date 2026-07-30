@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Flame, Target, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,11 +45,11 @@ export default function Home() {
           to hold you to it. Habits stick when someone&apos;s watching.
         </p>
         <div className="mt-2 flex w-full flex-col gap-3">
-          <Button size="lg" className="w-full" disabled>
-            Start a challenge
+          <Button size="lg" className="w-full" asChild>
+            <Link href="/login">Start a challenge</Link>
           </Button>
           <p className="text-muted-foreground text-center text-xs">
-            Coming together, one wave at a time.
+            Sign in with a magic link — no password needed.
           </p>
         </div>
       </section>
@@ -70,7 +71,7 @@ export default function Home() {
       </section>
 
       <footer className="text-muted-foreground mt-auto pt-16 text-center text-xs">
-        Habitual · Wave 0 — foundations
+        Habitual · Wave 1 — data layer &amp; auth
       </footer>
     </main>
   );
