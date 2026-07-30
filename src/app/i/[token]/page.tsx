@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, Eye, Flame, HandCoins, Trophy } from "lucide-react";
+import { ArrowRight, CalendarDays, Eye, Flame, HandCoins, Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { claimInvite } from "./actions";
 import {
   cadenceLabel,
   challengeProgress,
@@ -10,6 +11,8 @@ import {
   longestStreak,
   todayISO,
 } from "@/lib/challenges";
+import { BuddyReactions } from "@/components/buddy-reactions";
+import { ReactionsFeed, type ReactionItem } from "@/components/reactions-feed";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -27,7 +30,10 @@ type InviteView = {
   owner_name: string | null;
   invite_status: string;
   buddy_claimed: boolean;
+  viewer_is_owner: boolean | null;
+  viewer_is_buddy: boolean | null;
   check_ins: { date: string; value: number; note: string | null }[];
+  reactions: ReactionItem[];
 };
 
 const UUID_RE =
@@ -53,16 +59,28 @@ export default async function InvitePage({
 
   const supabase = await createClient();
 
-  // Read-only, NO auth: the SECURITY DEFINER RPC returns the challenge only
-  // when the invite token matches, so anyone with the link can watch.
-  const { data } = await supabase.rpc("challenge_by_invite", {
-    p_token: token,
-  });
+  const [{ data }, { data: auth }] = await Promise.all([
+    // Read-only, NO auth: the SECURITY DEFINER RPC returns the challenge only
+    // when the invite token matches, so anyone with the link can watch.
+    supabase.rpc("challenge_by_invite", { p_token: token }),
+    supabase.auth.getUser(),
+  ]);
 
   const view = data as InviteView | null;
   if (!view) notFound();
 
+  const user = auth.user;
+  const isSignedIn = user !== null;
+  const isOwner = view.viewer_is_owner === true;
+
+  // Claim on sign-in: the moment an identified, non-owner watcher lands here we
+  // attach them as a buddy (idempotent; no revalidate so it's render-safe).
+  if (isSignedIn && !isOwner && view.viewer_is_buddy !== true) {
+    await claimInvite(token);
+  }
+
   const rows = view.check_ins ?? [];
+  const reactions = view.reactions ?? [];
   const dates = rows.map((r) => r.date);
   const today = todayISO();
 
@@ -187,6 +205,61 @@ export default async function InvitePage({
         </div>
       </section>
 
+      {/* Buddy action — cheer / nudge / note (claims the invite on first tap) */}
+      <section className="mt-8 flex flex-col gap-3">
+        {isOwner ? (
+          <Card className="border-border/60 border-dashed">
+            <CardContent className="flex flex-col items-center gap-2 py-6 text-center">
+              <p className="font-medium">This is your challenge</p>
+              <p className="text-muted-foreground text-sm text-pretty">
+                This is the link your buddy sees. Manage it from the owner view.
+              </p>
+              <Button variant="outline" className="mt-2" asChild>
+                <Link href={`/challenges/${view.id}`}>
+                  Open owner view
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : isSignedIn ? (
+          <Card>
+            <CardContent className="flex flex-col gap-3">
+              <div className="flex flex-col gap-0.5">
+                <p className="font-medium">Cheer {owner} on</p>
+                <p className="text-muted-foreground text-sm text-pretty">
+                  You&apos;re their accountability buddy. Send a reaction.
+                </p>
+              </div>
+              <BuddyReactions token={token} />
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-border/60 border-dashed">
+            <CardContent className="flex flex-col items-center gap-2 py-6 text-center">
+              <p className="font-medium">Cheer {owner} on</p>
+              <p className="text-muted-foreground text-sm text-pretty">
+                Sign in to react and become their accountability buddy — it takes
+                one tap.
+              </p>
+              <Button className="mt-2" asChild>
+                <Link href={`/login?next=/i/${token}`}>Sign in to cheer</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </section>
+
+      {/* Reactions wall */}
+      {reactions.length > 0 && (
+        <section className="mt-8 flex flex-col gap-3">
+          <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
+            Reactions
+          </h2>
+          <ReactionsFeed reactions={reactions} />
+        </section>
+      )}
+
       {/* Recent activity */}
       {rows.length > 0 && (
         <section className="mt-8 flex flex-col gap-3">
@@ -226,22 +299,6 @@ export default async function InvitePage({
           </ul>
         </section>
       )}
-
-      {/* Buddy CTA — reactions + claim land in Wave 4 */}
-      <section className="mt-10 flex flex-col gap-3">
-        <Card className="border-border/60 border-dashed">
-          <CardContent className="flex flex-col items-center gap-2 py-6 text-center">
-            <p className="font-medium">Cheer {owner} on</p>
-            <p className="text-muted-foreground text-sm text-pretty">
-              Reactions and becoming their accountability buddy are coming soon.
-              For now, keep an eye on the streak.
-            </p>
-            <Button variant="outline" className="mt-2" asChild>
-              <Link href="/login">Start your own challenge</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </section>
 
       <footer className="text-muted-foreground mt-auto pt-10 text-center text-xs">
         Powered by Habitual · habits stick when someone&apos;s watching

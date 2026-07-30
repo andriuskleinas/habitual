@@ -12,6 +12,7 @@ import {
 } from "@/lib/challenges";
 import { CheckInForm } from "@/components/check-in-form";
 import { ShareInvite } from "@/components/share-invite";
+import { ReactionsFeed, type ReactionItem } from "@/components/reactions-feed";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Challenge" };
@@ -52,6 +53,13 @@ export default async function ChallengeDetailPage({
     .select("id, date, value, note")
     .eq("challenge_id", id)
     .order("date", { ascending: false });
+
+  // Buddy reactions with author names (owner/claimed-buddy only; the RPC gates
+  // access and returns null otherwise — direct RLS can't read others' names).
+  const { data: reactionsData } = await supabase.rpc("reactions_for_challenge", {
+    p_challenge_id: id,
+  });
+  const reactions = (reactionsData as ReactionItem[] | null) ?? [];
 
   const isOwner = challenge.owner_id === user.id;
 
@@ -190,9 +198,23 @@ export default async function ChallengeDetailPage({
         </section>
       ) : (
         <section className="mt-8">
-          <p className="text-muted-foreground text-sm">
-            You&apos;re watching this challenge. Reactions land in a later wave.
+          <p className="text-muted-foreground text-sm text-pretty">
+            You&apos;re a buddy on this challenge. Open it from{" "}
+            <Link href="/dashboard" className="text-foreground underline">
+              your dashboard
+            </Link>{" "}
+            to cheer them on.
           </p>
+        </section>
+      )}
+
+      {/* Reactions received */}
+      {reactions.length > 0 && (
+        <section className="mt-8 flex flex-col gap-3">
+          <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
+            {isOwner ? "Your buddies say" : "Reactions"}
+          </h2>
+          <ReactionsFeed reactions={reactions} />
         </section>
       )}
 

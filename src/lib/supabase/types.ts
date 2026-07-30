@@ -227,6 +227,11 @@ export type Database = {
     }
     Functions: {
       challenge_by_invite: { Args: { p_token: string }; Returns: Json }
+      claim_invite: { Args: { p_token: string }; Returns: Json }
+      reactions_for_challenge: {
+        Args: { p_challenge_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

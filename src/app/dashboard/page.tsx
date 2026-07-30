@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CheckCircle2, Flame, LogOut, Plus, Target } from "lucide-react";
+import { CheckCircle2, Eye, Flame, LogOut, Plus, Target } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
 import {
@@ -38,9 +38,25 @@ export default async function DashboardPage() {
     .eq("owner_id", user.id)
     .order("created_at", { ascending: false });
 
+  // "I'm a buddy on": challenges this user was invited to and claimed. RLS lets
+  // a claimed buddy read the challenge + its check-ins; the owner's name isn't
+  // buddy-readable, so these cards link to the token (buddy) view instead.
+  const { data: buddyRows } = await supabase
+    .from("buddies")
+    .select(
+      "invite_token, challenge:challenges(id, title, cadence, start_date, end_date, check_ins(date))",
+    )
+    .eq("buddy_user_id", user.id)
+    .eq("status", "claimed")
+    .order("created_at", { ascending: false });
+
   const displayName = profile?.name ?? user.email?.split("@")[0] ?? "there";
   const today = todayISO();
   const list = challenges ?? [];
+  const buddyList = (buddyRows ?? []).flatMap((b) => {
+    const c = Array.isArray(b.challenge) ? b.challenge[0] : b.challenge;
+    return c ? [{ token: b.invite_token, challenge: c }] : [];
+  });
 
   return (
     <main className="flex flex-1 flex-col px-6 py-10">
@@ -170,6 +186,60 @@ export default async function DashboardPage() {
           })
         )}
       </section>
+
+      {buddyList.length > 0 && (
+        <section className="mt-10 flex flex-col gap-4">
+          <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
+            I&apos;m a buddy on
+          </h2>
+          {buddyList.map(({ token, challenge: c }) => {
+            const dates = (c.check_ins ?? []).map(
+              (ci: { date: string }) => ci.date,
+            );
+            const streak = currentStreak(dates, today);
+            const progress = challengeProgress({
+              startDate: c.start_date,
+              endDate: c.end_date,
+              completedDays: new Set(dates).size,
+              today,
+            });
+            const doneToday = dates.includes(today);
+
+            return (
+              <Link key={c.id} href={`/i/${token}`} className="group/link">
+                <Card className="border-border/60 transition-colors group-hover/link:ring-foreground/20">
+                  <CardContent className="flex flex-col gap-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-col gap-0.5">
+                        <p className="leading-snug font-medium">{c.title}</p>
+                        <p className="text-muted-foreground inline-flex items-center gap-1 text-xs">
+                          <Eye className="size-3.5" />
+                          {doneToday ? "Checked in today" : "Watching"}
+                        </p>
+                      </div>
+                      <div className="text-primary flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5">
+                        <Flame className="size-3.5" />
+                        <span className="text-sm font-semibold tabular-nums">
+                          {streak}
+                        </span>
+                      </div>
+                    </div>
+
+                    {progress.percent !== null && (
+                      <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+                        <div
+                          className="bg-primary h-full rounded-full transition-all"
+                          style={{ width: `${progress.percent}%` }}
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </section>
+      )}
 
       <footer className="text-muted-foreground mt-auto pt-16 text-center text-xs">
         Signed in as {user.email}
