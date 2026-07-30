@@ -22,15 +22,20 @@ type Mode = "password" | "magic";
 export function LoginForm({
   next,
   hadLinkError = false,
+  fromInvite = false,
 }: {
   /** Already sanitised by `safeNext` on the server. */
   next: string;
   /** True when redirected here after a failed magic-link exchange. */
   hadLinkError?: boolean;
+  /** Arrived from a buddy invite — almost certainly a first-time visitor. */
+  fromInvite?: boolean;
 }) {
   const router = useRouter();
 
-  const [mode, setMode] = useState<Mode>("password");
+  // A buddy following an invite has no account yet, so lead with the magic
+  // link; the password tab is still one tap away for anyone who does.
+  const [mode, setMode] = useState<Mode>(fromInvite ? "magic" : "password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
@@ -123,9 +128,14 @@ export function LoginForm({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+        {/* "Welcome back" is wrong for a first-time buddy following an invite. */}
+        <h1 className="text-2xl font-bold tracking-tight">
+          {fromInvite ? "Sign in to cheer" : "Welcome back"}
+        </h1>
         <p className="text-muted-foreground text-pretty">
-          Sign in to keep your streak going.
+          {fromInvite
+            ? "No account needed to watch — just to cheer them on. A magic link is the quickest way in."
+            : "Sign in to keep your streak going."}
         </p>
       </div>
 

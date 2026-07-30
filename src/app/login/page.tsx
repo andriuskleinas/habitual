@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { safeNext } from "@/lib/auth";
+import { isInviteNext, safeNext } from "@/lib/auth";
 import { Wordmark } from "@/components/brand";
 import { LoginForm } from "@/components/login-form";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -21,6 +21,7 @@ export default async function LoginPage({
   // the whole page bail out to client-side rendering, so the sign-in form was
   // absent from the HTML until hydration.
   const { next, error } = await searchParams;
+  const target = safeNext(next);
 
   return (
     <>
@@ -35,7 +36,11 @@ export default async function LoginPage({
       >
         <div className="w-full max-w-sm">
           <div className="bg-card ring-foreground/10 rounded-2xl p-6 shadow-sm ring-1 sm:p-8">
-            <LoginForm next={safeNext(next)} hadLinkError={!!error} />
+            <LoginForm
+              next={target}
+              hadLinkError={!!error}
+              fromInvite={isInviteNext(target)}
+            />
           </div>
 
           <Link

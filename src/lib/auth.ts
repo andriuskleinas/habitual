@@ -20,6 +20,19 @@ export function safeNext(value: string | null | undefined): string {
   return value;
 }
 
+/**
+ * True when the post-sign-in destination is an invite (watcher) page.
+ *
+ * Someone arriving from an invite link is almost always a brand-new buddy who
+ * has no account yet, so the sign-in page leads with the magic link and drops
+ * the returning-user copy. Derived from `next` rather than an explicit flag so
+ * every route into an invite gets it — including the round trip through
+ * /signup's "sign in instead" link, which carries `next` along.
+ */
+export function isInviteNext(next: string): boolean {
+  return next.startsWith("/i/");
+}
+
 /** Minimum password length we accept in the UI. */
 export const MIN_PASSWORD_LENGTH = 8;
 
