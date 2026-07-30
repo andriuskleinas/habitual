@@ -110,7 +110,7 @@ export default function Home() {
 
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
                 <Button size="xl" className="w-full sm:w-auto" asChild>
-                  <Link href="/login">
+                  <Link href="/signup">
                     Start a challenge
                     <ArrowRight className="size-5" aria-hidden />
                   </Link>
@@ -132,7 +132,7 @@ export default function Home() {
                 </li>
                 <li className="inline-flex items-center gap-1.5">
                   <Zap className="text-success size-4" aria-hidden />
-                  Magic link — no password
+                  Password or magic link
                 </li>
                 <li className="inline-flex items-center gap-1.5">
                   <Users className="text-success size-4" aria-hidden />
@@ -425,13 +425,13 @@ export default function Home() {
                   className="bg-white text-neutral-900 shadow-lg hover:bg-white/90 dark:bg-white dark:text-neutral-900 dark:hover:bg-white/90"
                   asChild
                 >
-                  <Link href="/login">
+                  <Link href="/signup">
                     Start your first streak
                     <ArrowRight className="size-5" aria-hidden />
                   </Link>
                 </Button>
                 <p className="text-sm text-white/70">
-                  Free · magic-link sign-in · no card needed
+                  Free · no card needed · your buddy needs no account
                 </p>
               </div>
             </div>

@@ -7,6 +7,7 @@ import {
   Eye,
   Flame,
   HandCoins,
+  KeyRound,
   Trophy,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -90,6 +91,27 @@ export default async function InvitePage({
   // attach them as a buddy (idempotent; no revalidate so it's render-safe).
   if (isSignedIn && !isOwner && view.viewer_is_buddy !== true) {
     await claimInvite(token);
+  }
+
+  // Has this buddy turned into a full account holder yet? A magic-link user
+  // already has an auth.users row (and even a bcrypt hash), so the only
+  // reliable signal is our own `password_set_at`.
+  let hasPassword = false;
+  let ownsAnyChallenge = false;
+  if (isSignedIn && !isOwner) {
+    const [{ data: profile }, { count }] = await Promise.all([
+      supabase
+        .from("users")
+        .select("password_set_at")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("challenges")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", user.id),
+    ]);
+    hasPassword = !!profile?.password_set_at;
+    ownsAnyChallenge = (count ?? 0) > 0;
   }
 
   const rows = view.check_ins ?? [];
@@ -333,24 +355,79 @@ export default async function InvitePage({
           </section>
         )}
 
-        {/* Conversion footer — a watcher is the warmest possible lead */}
-        <section className="mt-12">
-          <div className="ring-foreground/10 bg-muted/40 flex flex-col items-center gap-3 rounded-2xl px-6 py-8 text-center">
-            <p className="font-semibold text-balance">
-              Want someone watching your streak?
-            </p>
-            <p className="text-muted-foreground max-w-sm text-sm text-pretty">
-              Set your own challenge, put something on the line, and send a link
-              like this one.
-            </p>
-            <Button className="mt-1" asChild>
-              <Link href="/">
-                Start your own challenge
-                <ArrowRight className="size-4" aria-hidden />
-              </Link>
-            </Button>
-          </div>
-        </section>
+        {/* Conversion footer — a watcher is the warmest possible lead, so the
+            ask is tailored to exactly how far along they already are. */}
+        {!isOwner && (
+          <section className="mt-12">
+            <div className="ring-primary/20 bg-primary/[0.04] flex flex-col items-center gap-3 rounded-2xl px-6 py-8 text-center">
+              {!isSignedIn ? (
+                <>
+                  <p className="text-lg font-semibold text-balance">
+                    Want someone watching your streak?
+                  </p>
+                  <p className="text-muted-foreground max-w-sm text-sm text-pretty">
+                    Create a free account, set your own challenge, and send a
+                    link like this one to a friend.
+                  </p>
+                  <Button size="lg" className="mt-1" asChild>
+                    <Link href={`/signup?next=/i/${token}`}>
+                      Create a free account
+                      <ArrowRight className="size-4" aria-hidden />
+                    </Link>
+                  </Button>
+                </>
+              ) : !hasPassword ? (
+                <>
+                  <span className="bg-primary/10 text-primary flex size-11 items-center justify-center rounded-xl">
+                    <KeyRound className="size-5" aria-hidden />
+                  </span>
+                  <p className="text-lg font-semibold text-balance">
+                    Finish setting up your account
+                  </p>
+                  <p className="text-muted-foreground max-w-sm text-sm text-pretty">
+                    You&apos;re signed in with an emailed link. Add a password
+                    and you can sign in instantly — then start your own
+                    challenge and invite someone to watch you.
+                  </p>
+                  <Button size="lg" className="mt-1" asChild>
+                    <Link href={`/account/password?next=/i/${token}`}>
+                      Set a password
+                      <ArrowRight className="size-4" aria-hidden />
+                    </Link>
+                  </Button>
+                </>
+              ) : !ownsAnyChallenge ? (
+                <>
+                  <p className="text-lg font-semibold text-balance">
+                    Your turn — who&apos;s watching you?
+                  </p>
+                  <p className="text-muted-foreground max-w-sm text-sm text-pretty">
+                    You&apos;re holding {owner} accountable. Set your own
+                    challenge and send them a link back.
+                  </p>
+                  <Button size="lg" className="mt-1" asChild>
+                    <Link href="/challenges/new">
+                      Start your own challenge
+                      <ArrowRight className="size-4" aria-hidden />
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold text-balance">
+                    Keep an eye on your own streak too
+                  </p>
+                  <Button variant="outline" className="mt-1" asChild>
+                    <Link href="/dashboard">
+                      Go to my dashboard
+                      <ArrowRight className="size-4" aria-hidden />
+                    </Link>
+                  </Button>
+                </>
+              )}
+            </div>
+          </section>
+        )}
 
         <footer className="text-muted-foreground mt-10 text-center text-xs">
           Powered by Habitual · habits stick when someone&apos;s watching

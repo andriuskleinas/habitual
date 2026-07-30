@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "./types";
 
 /** Routes that require a signed-in user. */
-const PROTECTED_PREFIXES = ["/dashboard"];
+const PROTECTED_PREFIXES = ["/dashboard", "/account"];
 
 /**
  * Refreshes the auth session on every request (so Server Components always see a

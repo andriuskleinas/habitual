@@ -1,46 +1,79 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Loader2, Mail, MailCheck } from "lucide-react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, KeyRound, Loader2, Mail, MailCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { safeNext } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
+import { cn } from "@/lib/utils";
+
+type Mode = "password" | "magic";
 
 export function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const next = safeNext(searchParams.get("next"));
+
+  const [mode, setMode] = useState<Mode>("password");
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
-    searchParams.get("error") ? "error" : "idle",
-  );
-  const [message, setMessage] = useState<string | null>(
-    searchParams.get("error")
-      ? "That sign-in link didn't work. Try again."
-      : null,
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [error, setError] = useState<string | null>(
+    searchParams.get("error") ? "That sign-in link didn't work. Try again." : null,
   );
 
-  const next = searchParams.get("next") ?? "/dashboard";
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function signInWithPassword(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("sending");
-    setMessage(null);
+    setError(null);
 
     const supabase = createClient();
-    const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
-
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      options: { emailRedirectTo },
+      password,
     });
 
     if (error) {
-      setStatus("error");
-      setMessage(error.message);
-    } else {
-      setStatus("sent");
+      setStatus("idle");
+      // Supabase returns a deliberately vague message for both a wrong
+      // password and an unknown email; keep it vague but actionable.
+      setError(
+        error.message === "Invalid login credentials"
+          ? "That email and password don't match. Check them, or use a magic link instead."
+          : error.message,
+      );
+      return;
     }
+
+    // Server Components read auth from cookies, so refresh before navigating.
+    router.refresh();
+    router.push(next);
+  }
+
+  async function sendMagicLink(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setStatus("sending");
+    setError(null);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
+    });
+
+    if (error) {
+      setStatus("idle");
+      setError(error.message);
+      return;
+    }
+    setStatus("sent");
   }
 
   if (status === "sent") {
@@ -74,17 +107,55 @@ export function LoginForm() {
     );
   }
 
+  const busy = status === "sending";
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Sign in to Habitual</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
         <p className="text-muted-foreground text-pretty">
-          Enter your email and we&apos;ll send a magic link — no password to
-          remember.
+          Sign in to keep your streak going.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      {/* Mode switch — password first, magic link still one tap away. */}
+      <div
+        role="tablist"
+        aria-label="Sign-in method"
+        className="bg-muted flex gap-1 rounded-lg p-1"
+      >
+        {(
+          [
+            ["password", "Password", KeyRound],
+            ["magic", "Magic link", Mail],
+          ] as const
+        ).map(([value, label, Icon]) => (
+          <button
+            key={value}
+            type="button"
+            role="tab"
+            aria-selected={mode === value}
+            onClick={() => {
+              setMode(value);
+              setError(null);
+            }}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              mode === value
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Icon className="size-4" aria-hidden />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <form
+        onSubmit={mode === "password" ? signInWithPassword : sendMagicLink}
+        className="flex flex-col gap-4"
+      >
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email">Email</Label>
           <Input
@@ -98,34 +169,83 @@ export function LoginForm() {
             autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            aria-invalid={status === "error"}
-            aria-describedby={message ? "login-error" : undefined}
-            disabled={status === "sending"}
+            aria-invalid={!!error}
+            disabled={busy}
           />
         </div>
+
+        {mode === "password" && (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="password">Password</Label>
+              <Link
+                href="/forgot-password"
+                className="text-muted-foreground hover:text-foreground rounded-sm text-xs underline-offset-4 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <PasswordInput
+              id="password"
+              name="password"
+              autoComplete="current-password"
+              placeholder="Your password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              aria-invalid={!!error}
+              disabled={busy}
+            />
+          </div>
+        )}
+
+        {mode === "magic" && (
+          <p className="text-muted-foreground text-sm text-pretty">
+            We&apos;ll email you a link that signs you in — no password needed.
+          </p>
+        )}
+
         <Button
           type="submit"
           size="lg"
           className="w-full"
-          disabled={status === "sending" || email.length === 0}
+          disabled={
+            busy ||
+            email.length === 0 ||
+            (mode === "password" && password.length === 0)
+          }
         >
-          {status === "sending" ? (
+          {busy ? (
             <Loader2 className="size-4 animate-spin" aria-hidden />
+          ) : mode === "password" ? (
+            <KeyRound className="size-4" aria-hidden />
           ) : (
             <Mail className="size-4" aria-hidden />
           )}
-          {status === "sending" ? "Sending link…" : "Send magic link"}
+          {busy
+            ? mode === "password"
+              ? "Signing in…"
+              : "Sending link…"
+            : mode === "password"
+              ? "Sign in"
+              : "Send magic link"}
         </Button>
-        {message && (
-          <p id="login-error" className="text-destructive text-sm" role="alert">
-            {message}
+
+        {error && (
+          <p className="text-destructive text-sm text-pretty" role="alert">
+            {error}
           </p>
         )}
       </form>
 
-      <p className="text-muted-foreground text-center text-xs text-pretty">
-        By continuing you agree to keep your streak honest. That&apos;s the only
-        rule.
+      <p className="text-muted-foreground text-center text-sm">
+        New here?{" "}
+        <Link
+          href={`/signup?next=${encodeURIComponent(next)}`}
+          className="text-foreground font-medium underline underline-offset-4"
+        >
+          Create an account
+        </Link>
       </p>
     </div>
   );

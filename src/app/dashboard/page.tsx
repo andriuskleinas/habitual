@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CheckCircle2, Eye, Flame, Plus, Target, Trophy } from "lucide-react";
+import {
+  CheckCircle2,
+  Eye,
+  Flame,
+  KeyRound,
+  Plus,
+  Target,
+  Trophy,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   cadenceLabel,
@@ -30,7 +38,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("name, email")
+    .select("name, email, password_set_at")
     .eq("id", user.id)
     .single();
 
@@ -93,6 +101,29 @@ export default async function DashboardPage() {
                   } still waiting on today's check-in.`}
           </p>
         </section>
+
+        {/* Magic-link-only accounts: one dismissible-feeling nudge toward a
+            password, which is what makes signing in on a new device instant. */}
+        {!profile?.password_set_at && (
+          <section className="mt-6">
+            <div className="ring-primary/20 bg-primary/[0.04] flex flex-col gap-3 rounded-xl px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
+                  <KeyRound className="size-4" aria-hidden />
+                </span>
+                <div className="flex flex-col">
+                  <p className="text-sm font-medium">Add a password</p>
+                  <p className="text-muted-foreground text-sm text-pretty">
+                    Sign in instantly instead of waiting for an emailed link.
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" className="sm:shrink-0" asChild>
+                <Link href="/account/password?next=/dashboard">Set password</Link>
+              </Button>
+            </div>
+          </section>
+        )}
 
         {list.length > 0 && (
           <section aria-label="Your stats" className="mt-6 grid grid-cols-3 gap-3">

@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { safeNext } from "@/lib/auth";
 
 /**
- * Magic-link / PKCE callback. Supabase redirects here with a `code` after the
- * user clicks their email link; we exchange it for a session cookie.
+ * PKCE callback for every emailed link: magic-link sign-in, signup
+ * confirmation, and password recovery. Supabase redirects here with a `code`,
+ * which we exchange for a session cookie before forwarding to `next`.
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
+  // `next` is attacker-controllable via the query string, so constrain it to a
+  // same-origin path before it reaches a Location header.
+  const next = safeNext(searchParams.get("next"));
 
   if (code) {
     const supabase = await createClient();
