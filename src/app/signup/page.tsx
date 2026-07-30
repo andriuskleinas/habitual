@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -29,8 +28,9 @@ export default async function SignupPage({
   // Already signed in (typically a magic-link buddy who tapped "create
   // account"). `signUp` would silently no-op on their existing email, so send
   // them to the flow that actually works: setting a password.
+  const target = safeNext(next);
+
   if (user) {
-    const target = safeNext(next);
     redirect(`/account/password?next=${encodeURIComponent(target)}`);
   }
 
@@ -47,9 +47,7 @@ export default async function SignupPage({
       >
         <div className="w-full max-w-sm">
           <div className="bg-card ring-foreground/10 rounded-2xl p-6 shadow-sm ring-1 sm:p-8">
-            <Suspense fallback={<div className="h-96" />}>
-              <SignupForm />
-            </Suspense>
+            <SignupForm next={target} />
           </div>
 
           <Link

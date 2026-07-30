@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { safeNext } from "@/lib/auth";
 import { Wordmark } from "@/components/brand";
 import { LoginForm } from "@/components/login-form";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -9,10 +9,19 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export const metadata: Metadata = {
   title: "Sign in",
   description:
-    "Sign in to Habitual with a magic link — no password needed. Start a challenge and invite a buddy to keep you accountable.",
+    "Sign in to Habitual with a password or a magic link. Start a challenge and invite a buddy to keep you accountable.",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string; error?: string }>;
+}) {
+  // Read on the server and passed down: `useSearchParams` inside the form made
+  // the whole page bail out to client-side rendering, so the sign-in form was
+  // absent from the HTML until hydration.
+  const { next, error } = await searchParams;
+
   return (
     <>
       <header className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-8">
@@ -26,10 +35,7 @@ export default function LoginPage() {
       >
         <div className="w-full max-w-sm">
           <div className="bg-card ring-foreground/10 rounded-2xl p-6 shadow-sm ring-1 sm:p-8">
-            {/* useSearchParams needs a Suspense boundary during prerender. */}
-            <Suspense fallback={<div className="h-64" />}>
-              <LoginForm />
-            </Suspense>
+            <LoginForm next={safeNext(next)} hadLinkError={!!error} />
           </div>
 
           <Link

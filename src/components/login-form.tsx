@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, KeyRound, Loader2, Mail, MailCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { safeNext } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,17 +13,29 @@ import { cn } from "@/lib/utils";
 
 type Mode = "password" | "magic";
 
-export function LoginForm() {
+/**
+ * `next` and `hadLinkError` are read on the SERVER and passed in, rather than
+ * via `useSearchParams`. Calling that hook here made the whole form bail out to
+ * client-side rendering, so the sign-in page shipped an empty box and only
+ * painted the form once JS had hydrated.
+ */
+export function LoginForm({
+  next,
+  hadLinkError = false,
+}: {
+  /** Already sanitised by `safeNext` on the server. */
+  next: string;
+  /** True when redirected here after a failed magic-link exchange. */
+  hadLinkError?: boolean;
+}) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const next = safeNext(searchParams.get("next"));
 
   const [mode, setMode] = useState<Mode>("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(
-    searchParams.get("error") ? "That sign-in link didn't work. Try again." : null,
+    hadLinkError ? "That sign-in link didn't work. Try again." : null,
   );
 
   async function signInWithPassword(e: React.FormEvent<HTMLFormElement>) {

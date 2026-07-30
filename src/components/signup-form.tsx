@@ -2,14 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { Loader2, MailCheck, UserPlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   checkPassword,
   isExistingAccount,
   MIN_PASSWORD_LENGTH,
-  safeNext,
 } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,10 +17,9 @@ import {
   PasswordStrength,
 } from "@/components/ui/password-input";
 
-export function SignupForm() {
-  const searchParams = useSearchParams();
-  const next = safeNext(searchParams.get("next"));
-
+/** `next` is sanitised on the server and passed in — see the note in LoginForm
+ *  about `useSearchParams` forcing client-side rendering. */
+export function SignupForm({ next }: { next: string }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
