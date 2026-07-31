@@ -10,16 +10,18 @@ export default function DashboardLoading() {
       <Skeleton className="h-9 w-56" />
       <Skeleton className="mt-2 h-5 w-72" />
 
-      <div className="mt-6 grid grid-cols-3 gap-3">
-        {Array.from({ length: 3 }, (_, i) => (
-          <Skeleton key={i} className="h-[68px] rounded-xl" />
-        ))}
+      {/* State-of-play panel, then the stat strip. */}
+      <Skeleton className="mt-6 h-[116px] rounded-2xl" />
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Skeleton className="h-[68px] rounded-xl" />
+        <Skeleton className="h-[68px] rounded-xl" />
+        <Skeleton className="col-span-2 h-[68px] rounded-xl" />
       </div>
 
-      <Skeleton className="mt-10 h-4 w-32" />
+      <Skeleton className="mt-10 h-4 w-36" />
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         {Array.from({ length: 4 }, (_, i) => (
-          <Skeleton key={i} className="h-[132px] rounded-xl" />
+          <Skeleton key={i} className="h-[172px] rounded-xl" />
         ))}
       </div>
     </main>

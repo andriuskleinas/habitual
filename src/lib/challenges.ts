@@ -304,6 +304,8 @@ export type ChallengeEval = {
   maxMissesInRow: number | null;
   status: ChallengeStatus;
   failReason: "skips" | "in-a-row" | "total" | null;
+  /** True if a scheduled period covers today at all — i.e. this one is "on" now. */
+  coversToday: boolean;
   /** True if the period covering today has nothing logged yet. */
   dueNow: boolean;
   /** True once the end date has passed. */
@@ -465,6 +467,7 @@ export function evaluateChallenge(
         : status === "failed"
           ? "total"
           : null,
+    coversToday: currentIndex >= 0,
     dueNow: currentIndex >= 0 && !filled[currentIndex],
     isEnded,
     mode: goalMode({ dailyTarget: rules.dailyTarget, totalTarget }),
