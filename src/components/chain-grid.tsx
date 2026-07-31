@@ -1,9 +1,9 @@
 import type { Period } from "@/lib/challenges";
 
 /**
- * One cell per scheduled check-in: filled when logged, red once a slot has
- * elapsed unfilled, outlined for the one that's live right now, faint for
- * what's still ahead.
+ * One cell per scheduled check-in: green when logged, red once a slot has
+ * elapsed unfilled, outlined in indigo for the one that's live right now, faint
+ * for what's still ahead.
  *
  * Shared by the owner view and the buddy (invite) view. On the invite page it
  * does the heavy lifting a "1 day streak" number can't: it shows the *shape* of
@@ -44,11 +44,11 @@ export function ChainGrid({
               title={p.start === p.end ? p.start : `${p.start} – ${p.end}`}
               className={
                 filled
-                  ? "bg-primary aspect-square rounded-[4px]"
+                  ? "bg-success aspect-square rounded-[4px]"
                   : isPast
                     ? "bg-destructive/35 aspect-square rounded-[4px]"
                     : isNow
-                      ? "ring-primary/60 aspect-square rounded-[4px] ring-2"
+                      ? "ring-primary/60 bg-primary/5 aspect-square animate-pulse rounded-[4px] ring-2"
                       : "bg-muted-foreground/15 aspect-square rounded-[4px]"
               }
             />
@@ -58,7 +58,7 @@ export function ChainGrid({
 
       {legend && (
         <ul className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[0.7rem]">
-          <LegendKey className="bg-primary">done</LegendKey>
+          <LegendKey className="bg-success">done</LegendKey>
           <LegendKey className="bg-destructive/35">missed</LegendKey>
           <LegendKey className="ring-primary/60 ring-2">today</LegendKey>
           <LegendKey className="bg-muted-foreground/15">to come</LegendKey>

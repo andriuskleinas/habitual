@@ -4,11 +4,13 @@
  * bundle or the initial client payload, and stays silent for users who ask for
  * reduced motion.
  *
- * Colors are pulled from the brand palette (violet primary + emerald success +
- * a warm streak-flame gold) so the burst reads as "Habitual", not generic.
+ * Colours are the brand palette itself — deep indigo, fresh green, soft amber,
+ * plus a lighter indigo and white to keep the burst from going muddy — so the
+ * confetti reads as "Habitual", not generic. Literal hex because canvas-confetti
+ * paints to a canvas and can't resolve a CSS custom property.
  */
 
-const BRAND_COLORS = ["#7c3aed", "#22c55e", "#f59e0b", "#a855f7", "#ffffff"];
+const BRAND_COLORS = ["#344EAD", "#2FA76A", "#F5B942", "#5C7AD6", "#FFFFFF"];
 
 function prefersReducedMotion(): boolean {
   return (

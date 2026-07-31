@@ -3,9 +3,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { isInviteNext, safeNext } from "@/lib/auth";
 import { BUDDY_REACTIONS, parsePendingReaction } from "@/lib/reactions";
-import { Wordmark } from "@/components/brand";
 import { LoginForm } from "@/components/login-form";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { AuthHeader } from "@/components/auth-header";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -38,10 +37,7 @@ export default async function LoginPage({
 
   return (
     <>
-      <header className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-8">
-        <Wordmark />
-        <ThemeToggle />
-      </header>
+      <AuthHeader />
 
       <main
         id="main"

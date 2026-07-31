@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { Wordmark } from "@/components/brand";
 import { ForgotPasswordForm } from "@/components/forgot-password-form";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { AuthHeader } from "@/components/auth-header";
 
 export const metadata: Metadata = {
   title: "Reset your password",
@@ -11,10 +10,7 @@ export const metadata: Metadata = {
 export default function ForgotPasswordPage() {
   return (
     <>
-      <header className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-8">
-        <Wordmark />
-        <ThemeToggle />
-      </header>
+      <AuthHeader />
 
       <main
         id="main"

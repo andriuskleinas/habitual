@@ -49,8 +49,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#101014" },
+    // The two `--background` values, as hex — this is browser chrome, which
+    // can't read a custom property.
+    { media: "(prefers-color-scheme: light)", color: "#FDFDFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B0F19" },
   ],
   width: "device-width",
   initialScale: 1,

@@ -4,9 +4,8 @@ import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { safeNext } from "@/lib/auth";
-import { Wordmark } from "@/components/brand";
 import { SignupForm } from "@/components/signup-form";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { AuthHeader } from "@/components/auth-header";
 
 export const metadata: Metadata = {
   title: "Create your account",
@@ -36,10 +35,7 @@ export default async function SignupPage({
 
   return (
     <>
-      <header className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-8">
-        <Wordmark />
-        <ThemeToggle />
-      </header>
+      <AuthHeader />
 
       <main
         id="main"

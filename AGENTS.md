@@ -40,7 +40,20 @@ here and no bundled docs to consult.
 - **Dates are UTC calendar days** (`YYYY-MM-DD`). Always go through `todayISO()` /
   `addDays()` so what gets written and what gets compared agree.
 - Dark mode is class-based, resolved pre-paint by `ThemeScript`. The variant is
-  `&:where(.dark, .dark *)` so it also matches `<html>` itself.
+  `&:where(.dark, .dark *)` so it also matches `<html>` itself. **It is an
+  account feature**: the only control is the picker on `/account`, and with
+  nothing stored `ThemeScript` follows the OS *only if a session cookie is
+  present*, so anonymous visitors always get light. Don't add a theme toggle to
+  a public page.
+- **Three brand colours, each with one job** (defined in `globals.css`):
+  indigo `--primary` for structure, navigation and CTAs; green `--success` for
+  check-ins, streaks and progress; amber `--warning` (aliased `--cheer` where a
+  cheer, not a warning, is meant) for stakes, nudges and milestones. A progress
+  bar is never indigo and a button is never green.
+- **`--success` / `--warning` fill shapes; `--success-ink` / `--warning-ink` set
+  type.** The brand green and amber clear 3:1 (icons, bars, large text) but not
+  the 4.5:1 body copy needs. `text-success` on a page background fails contrast —
+  use `text-success-ink`. Same for amber, where the gap is much worse.
 
 ## Working here
 

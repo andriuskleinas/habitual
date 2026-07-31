@@ -19,7 +19,7 @@ export const contentType = "image/png";
  */
 export const revalidate = 300;
 
-const BG = "linear-gradient(135deg, #4f2ddb 0%, #7c3aed 55%, #c026a8 100%)";
+const BG = "linear-gradient(135deg, #22357A 0%, #344EAD 55%, #2F7BD4 100%)";
 const DIM = "rgba(255,255,255,0.82)";
 
 /** Longest run of cells that still reads as a chain rather than a texture. */

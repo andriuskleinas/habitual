@@ -49,7 +49,7 @@ export function TodayDone({
 
   return (
     <div className="ring-success/25 bg-success/[0.07] flex flex-col items-center gap-3 rounded-2xl px-5 py-7 text-center">
-      <span className="bg-success/15 text-success flex size-14 items-center justify-center rounded-2xl">
+      <span className="bg-success/15 text-success-ink flex size-14 items-center justify-center rounded-2xl">
         <CheckCircle2 className="size-7" aria-hidden />
       </span>
 

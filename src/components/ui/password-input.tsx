@@ -55,8 +55,11 @@ export function PasswordStrength({
   show: boolean;
 }) {
   if (!show) return null;
+  // Weak → strong runs red, amber, green. Brand indigo used to sit in the
+  // middle of that ramp, which read as a fourth, unrelated state rather than
+  // as a step along the way.
   const tone =
-    score >= 3 ? "bg-success" : score === 2 ? "bg-primary" : "bg-warning";
+    score >= 3 ? "bg-success" : score === 2 ? "bg-warning" : "bg-destructive";
 
   return (
     <div className="flex items-center gap-2">

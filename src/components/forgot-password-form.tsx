@@ -35,7 +35,7 @@ export function ForgotPasswordForm() {
   if (status === "sent") {
     return (
       <div className="flex flex-col items-center gap-4 text-center">
-        <span className="bg-success/10 text-success flex size-14 items-center justify-center rounded-2xl">
+        <span className="bg-success/10 text-success-ink flex size-14 items-center justify-center rounded-2xl">
           <MailCheck className="size-7" aria-hidden />
         </span>
         <div className="flex flex-col gap-1.5">

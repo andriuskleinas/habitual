@@ -69,7 +69,7 @@ export function BuddyReactions({
   if (sent) {
     return (
       <div className="flex flex-col items-center gap-3 py-2 text-center">
-        <span className="bg-success/10 text-success flex size-12 items-center justify-center rounded-2xl">
+        <span className="bg-success/10 text-success-ink flex size-12 items-center justify-center rounded-2xl">
           <Check className="size-6" aria-hidden />
         </span>
         <div className="flex flex-col gap-1">

@@ -34,7 +34,7 @@ export function ChangeEmailForm({ current }: { current: string }) {
   if (state.sentTo) {
     return (
       <div className="ring-success/25 bg-success/[0.07] flex items-start gap-3 rounded-xl px-4 py-3.5">
-        <MailCheck className="text-success mt-0.5 size-5 shrink-0" aria-hidden />
+        <MailCheck className="text-success-ink mt-0.5 size-5 shrink-0" aria-hidden />
         <div className="flex flex-col gap-1">
           <p className="text-sm font-medium">Check your inbox</p>
           <p className="text-muted-foreground text-sm text-pretty">

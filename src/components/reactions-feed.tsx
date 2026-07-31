@@ -43,7 +43,9 @@ export function ReactionsFeed({ reactions }: { reactions: ReactionItem[] }) {
             key={`${r.created_at}-${i}`}
             className="ring-foreground/10 flex items-start gap-3 rounded-lg px-3 py-2.5 ring-1"
           >
-            <div className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg">
+            {/* Amber: a cheer or a nudge is your buddy's voice, and it wears
+                the same colour everywhere it appears. */}
+            <div className="bg-cheer/20 text-cheer-ink flex size-8 shrink-0 items-center justify-center rounded-lg">
               <Icon className="size-4" />
             </div>
             <div className="flex min-w-0 flex-col">

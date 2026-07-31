@@ -165,7 +165,7 @@ export default async function ChallengeDetailPage({
           </div>
         )}
         {ev.status === "won" && (
-          <div className="text-success ring-success/25 bg-success/[0.06] mt-5 flex items-start gap-2.5 rounded-xl px-4 py-3">
+          <div className="text-success-ink ring-success/25 bg-success/[0.06] mt-5 flex items-start gap-2.5 rounded-xl px-4 py-3">
             <PartyPopper className="mt-0.5 size-4 shrink-0" aria-hidden />
             <p className="text-sm text-pretty">
               <span className="font-semibold">You made it. </span>
@@ -191,12 +191,14 @@ export default async function ChallengeDetailPage({
             fold on a phone. It used to sit in the sidebar, below the QR code. */}
         {challenge.stake_text && (
           <section aria-label="What's on the line" className="mt-6">
-            <div className="ring-primary/25 from-primary/10 via-primary/[0.05] flex items-start gap-3.5 rounded-2xl bg-gradient-to-r to-transparent px-4 py-4 ring-1 sm:px-5">
-              <span className="bg-primary/15 text-primary flex size-11 shrink-0 items-center justify-center rounded-xl">
+            {/* Amber, the reminder colour: the stake is the thing tapping you
+                on the shoulder, not part of the app's furniture. */}
+            <div className="ring-cheer/40 from-cheer/20 via-cheer/[0.08] flex items-start gap-3.5 rounded-2xl bg-gradient-to-r to-transparent px-4 py-4 ring-1 sm:px-5">
+              <span className="bg-cheer/25 text-cheer-ink flex size-11 shrink-0 items-center justify-center rounded-xl">
                 <HandCoins className="size-5" aria-hidden />
               </span>
               <div className="flex min-w-0 flex-col gap-0.5">
-                <p className="text-primary text-[0.7rem] font-semibold tracking-widest uppercase">
+                <p className="text-cheer-ink text-[0.7rem] font-semibold tracking-widest uppercase">
                   On the line
                 </p>
                 <p className="text-base font-semibold text-pretty sm:text-lg">
@@ -212,14 +214,14 @@ export default async function ChallengeDetailPage({
           <div className="flex flex-col gap-8">
             {/* Streak hero — the payoff number */}
             <section aria-label="Progress" className="flex flex-col gap-3">
-              <div className="ring-primary/15 from-primary/12 via-primary/5 relative overflow-hidden rounded-2xl bg-gradient-to-br to-transparent px-5 py-5 ring-1">
+              <div className="ring-success/20 from-success/12 via-success/5 relative overflow-hidden rounded-2xl bg-gradient-to-br to-transparent px-5 py-5 ring-1">
                 <div className="flex items-center gap-4">
-                  <span className="bg-primary/15 text-primary flex size-14 shrink-0 items-center justify-center rounded-2xl">
+                  <span className="bg-success/15 text-success-ink flex size-14 shrink-0 items-center justify-center rounded-2xl">
                     <Flame className="size-7" aria-hidden />
                   </span>
                   <div className="flex flex-col">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-primary text-4xl leading-none font-bold tabular-nums">
+                      <span className="text-success-ink text-4xl leading-none font-bold tabular-nums">
                         {ev.streak}
                       </span>
                       <span className="text-muted-foreground text-sm">
@@ -232,7 +234,7 @@ export default async function ChallengeDetailPage({
                     </p>
                   </div>
                   {todayRow && (
-                    <span className="text-success ring-success/20 bg-background/70 ml-auto inline-flex items-center gap-1 self-start rounded-full px-2.5 py-1 text-xs font-medium ring-1">
+                    <span className="text-success-ink ring-success/20 bg-background/70 ml-auto inline-flex items-center gap-1 self-start rounded-full px-2.5 py-1 text-xs font-medium ring-1">
                       <CheckCircle2 className="size-3.5" aria-hidden />
                       Today
                     </span>
@@ -244,7 +246,7 @@ export default async function ChallengeDetailPage({
                 <div className="ring-foreground/10 flex flex-col gap-2.5 rounded-2xl px-5 py-4 ring-1">
                   <div className="flex items-center justify-between gap-3">
                     <span className="flex items-center gap-1.5">
-                      <Trophy className="text-primary size-4" aria-hidden />
+                      <Trophy className="text-success-ink size-4" aria-hidden />
                       <span className="text-sm font-semibold tabular-nums">
                         {ev.mode === "total"
                           ? `${formatCount(ev.totalLogged, challenge.target_unit)} of ${formatCount(ev.totalTarget ?? 0)}`
@@ -269,7 +271,7 @@ export default async function ChallengeDetailPage({
                     aria-label="Challenge completion"
                   >
                     <div
-                      className="bg-primary h-full rounded-full transition-all"
+                      className="bg-success h-full rounded-full transition-all duration-700"
                       style={{ width: `${ev.percent}%` }}
                     />
                   </div>
@@ -278,12 +280,12 @@ export default async function ChallengeDetailPage({
                   {ev.pace !== null && ev.status === "active" && (
                     <p className="text-xs">
                       {ev.pace >= 0 ? (
-                        <span className="text-success font-medium">
+                        <span className="text-success-ink font-medium">
                           {formatCount(ev.pace, challenge.target_unit)} ahead of
                           pace
                         </span>
                       ) : (
-                        <span className="text-warning font-medium">
+                        <span className="text-warning-ink font-medium">
                           {formatCount(-ev.pace, challenge.target_unit)} behind
                           pace
                         </span>
@@ -370,7 +372,7 @@ export default async function ChallengeDetailPage({
                       key={r.id}
                       className="ring-foreground/10 flex items-start gap-3 rounded-lg px-3 py-2 ring-1"
                     >
-                      <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold">
+                      <span className="bg-success/12 text-success-ink flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold">
                         {formatDay(r.date)}
                       </span>
                       <div className="flex min-w-0 flex-col">
@@ -440,7 +442,7 @@ export default async function ChallengeDetailPage({
                       <span
                         className={
                           ev.skipsLeft === 0
-                            ? "text-warning font-semibold tabular-nums"
+                            ? "text-warning-ink font-semibold tabular-nums"
                             : "font-semibold tabular-nums"
                         }
                       >

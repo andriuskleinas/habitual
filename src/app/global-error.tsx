@@ -22,7 +22,7 @@ export default function GlobalError({
           justifyContent: "center",
           fontFamily: "system-ui, sans-serif",
           background: "#fff",
-          color: "#171717",
+          color: "#191C29",
           padding: "24px",
         }}
       >
@@ -41,7 +41,7 @@ export default function GlobalError({
           <button
             onClick={reset}
             style={{
-              background: "#7c3aed",
+              background: "#344EAD",
               color: "#fff",
               border: 0,
               borderRadius: "0.5rem",

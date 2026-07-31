@@ -50,92 +50,129 @@
   --radius-4xl: calc(var(--radius) * 2.6);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-success-ink: var(--success-ink);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-warning-ink: var(--warning-ink);
+  /* Amber does double duty: a nudge is a warning, a cheer is a celebration.
+     `cheer-*` is the same colour under the name that reads right at the call
+     site — there is no second value to keep in sync. */
+  --color-cheer: var(--warning);
+  --color-cheer-foreground: var(--warning-foreground);
+  --color-cheer-ink: var(--warning-ink);
   --color-brand-from: var(--brand-from);
   --color-brand-to: var(--brand-to);
 }
 
+/* ---------------------------------------------------------------------------
+   Palette
+   ---------------------------------------------------------------------------
+   Three brand colours, each with one job. Keeping them to their job is what
+   makes a screen readable at a glance — indigo is never "done", green is never
+   a button you haven't earned.
+
+     Deep indigo  #344EAD  oklch(0.46 0.155 268)  structure, navigation, brand
+     Fresh green  #2FA76A  oklch(0.648 0.139 156) check-ins, streaks, progress
+     Soft amber   #F5B942  oklch(0.821 0.147 80)  reminders, cheers, milestones
+
+   `*-ink` exists because the brand green and amber are *fill* colours: at their
+   given lightness they clear 3:1 (icons, bars, large type) but not the 4.5:1 a
+   body-sized label needs. `--success` fills a shape, `--success-ink` sets type
+   on the page background. Never swap them.
+
+   Neutrals carry a trace of the indigo hue (268) rather than being dead grey,
+   so the greys sit in the same family as the brand instead of beside it.
+--------------------------------------------------------------------------- */
+
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.995 0.002 268);
+  --foreground: oklch(0.19 0.028 268);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.19 0.028 268);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.55 0.235 285);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0.005 285);
-  --secondary-foreground: oklch(0.28 0.09 285);
-  --muted: oklch(0.968 0.004 285);
-  --muted-foreground: oklch(0.505 0.02 285);
-  --accent: oklch(0.95 0.03 285);
-  --accent-foreground: oklch(0.32 0.12 285);
+  --popover-foreground: oklch(0.19 0.028 268);
+  --primary: oklch(0.46 0.155 268);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.965 0.012 268);
+  --secondary-foreground: oklch(0.34 0.11 268);
+  --muted: oklch(0.966 0.008 268);
+  --muted-foreground: oklch(0.49 0.028 268);
+  --accent: oklch(0.945 0.03 268);
+  --accent-foreground: oklch(0.35 0.12 268);
   --destructive: oklch(0.577 0.245 27.325);
-  --success: oklch(0.55 0.15 155);
-  --success-foreground: oklch(0.985 0 0);
-  --warning: oklch(0.62 0.16 65);
-  --warning-foreground: oklch(0.985 0 0);
-  --border: oklch(0.918 0.006 285);
-  --input: oklch(0.918 0.006 285);
-  --ring: oklch(0.55 0.235 285);
-  --chart-1: oklch(0.55 0.235 285);
-  --chart-2: oklch(0.62 0.16 155);
-  --chart-3: oklch(0.7 0.18 45);
-  --chart-4: oklch(0.65 0.22 330);
-  --chart-5: oklch(0.6 0.2 240);
-  /* Brand gradient stops — used by hero art, CTA panels and the OG image. */
-  --brand-from: oklch(0.55 0.235 285);
-  --brand-to: oklch(0.62 0.21 330);
+  --success: oklch(0.648 0.139 156);
+  --success-foreground: oklch(0.99 0 0);
+  --success-ink: oklch(0.52 0.125 156);
+  --warning: oklch(0.821 0.147 80);
+  --warning-foreground: oklch(0.26 0.06 80);
+  --warning-ink: oklch(0.56 0.115 70);
+  --border: oklch(0.915 0.01 268);
+  --input: oklch(0.915 0.01 268);
+  --ring: oklch(0.46 0.155 268);
+  --chart-1: oklch(0.46 0.155 268);
+  --chart-2: oklch(0.648 0.139 156);
+  --chart-3: oklch(0.821 0.147 80);
+  --chart-4: oklch(0.6 0.15 245);
+  --chart-5: oklch(0.66 0.1 205);
+  /* Brand gradient stops — used by the mark, hero art, CTA panels and the OG
+     image. Both stops stay in the indigo family so the gradient reads as one
+     colour with depth, not as two competing ones. */
+  --brand-from: oklch(0.46 0.155 268);
+  --brand-to: oklch(0.6 0.15 245);
   --radius: 0.75rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.985 0.004 268);
+  --sidebar-foreground: oklch(0.19 0.028 268);
+  --sidebar-primary: oklch(0.46 0.155 268);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.966 0.008 268);
+  --sidebar-accent-foreground: oklch(0.35 0.12 268);
+  --sidebar-border: oklch(0.915 0.01 268);
+  --sidebar-ring: oklch(0.46 0.155 268);
 }
 
 .dark {
-  --background: oklch(0.16 0.012 285);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0.014 285);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0.014 285);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.72 0.17 285);
-  --primary-foreground: oklch(0.16 0.02 285);
-  --secondary: oklch(0.27 0.03 285);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.26 0.02 285);
-  --muted-foreground: oklch(0.735 0.03 285);
-  --accent: oklch(0.3 0.06 285);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.17 0.022 268);
+  --foreground: oklch(0.97 0.005 268);
+  --card: oklch(0.215 0.026 268);
+  --card-foreground: oklch(0.97 0.005 268);
+  --popover: oklch(0.215 0.026 268);
+  --popover-foreground: oklch(0.97 0.005 268);
+  /* Lifted well above the light-mode indigo: #344EAD on a near-black surface
+     is close to unreadable, so dark mode keeps the hue and trades depth for
+     luminance. */
+  --primary: oklch(0.72 0.135 268);
+  --primary-foreground: oklch(0.17 0.04 268);
+  --secondary: oklch(0.29 0.04 268);
+  --secondary-foreground: oklch(0.97 0.005 268);
+  --muted: oklch(0.27 0.03 268);
+  --muted-foreground: oklch(0.74 0.03 268);
+  --accent: oklch(0.33 0.07 268);
+  --accent-foreground: oklch(0.97 0.005 268);
   --destructive: oklch(0.704 0.191 22.216);
-  --success: oklch(0.72 0.15 155);
-  --success-foreground: oklch(0.16 0.02 155);
-  --warning: oklch(0.78 0.14 70);
-  --warning-foreground: oklch(0.16 0.02 70);
+  --success: oklch(0.72 0.14 156);
+  --success-foreground: oklch(0.17 0.04 156);
+  --success-ink: oklch(0.79 0.14 156);
+  --warning: oklch(0.83 0.145 80);
+  --warning-foreground: oklch(0.2 0.05 80);
+  --warning-ink: oklch(0.86 0.13 82);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.72 0.17 285);
-  --chart-1: oklch(0.72 0.17 285);
-  --chart-2: oklch(0.72 0.15 155);
-  --chart-3: oklch(0.75 0.17 55);
-  --chart-4: oklch(0.7 0.2 330);
-  --chart-5: oklch(0.68 0.18 240);
-  --brand-from: oklch(0.72 0.17 285);
-  --brand-to: oklch(0.72 0.18 330);
-  --sidebar: oklch(0.205 0.014 285);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.72 0.135 268);
+  --chart-1: oklch(0.72 0.135 268);
+  --chart-2: oklch(0.72 0.14 156);
+  --chart-3: oklch(0.83 0.145 80);
+  --chart-4: oklch(0.74 0.13 240);
+  --chart-5: oklch(0.76 0.09 205);
+  --brand-from: oklch(0.62 0.16 268);
+  --brand-to: oklch(0.72 0.13 240);
+  --sidebar: oklch(0.215 0.026 268);
+  --sidebar-foreground: oklch(0.97 0.005 268);
+  --sidebar-primary: oklch(0.72 0.135 268);
+  --sidebar-primary-foreground: oklch(0.17 0.04 268);
+  --sidebar-accent: oklch(0.29 0.04 268);
+  --sidebar-accent-foreground: oklch(0.97 0.005 268);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.72 0.135 268);
 }
 
 @layer base {
@@ -160,6 +197,26 @@
   summary::-webkit-details-marker {
     display: none;
   }
+  /* Let the FAQ panel slide rather than snap. `interpolate-size` is what makes
+     a transition to `auto` height legal at all; browsers without it (and anyone
+     asking for reduced motion, via the block at the foot of this file) get the
+     plain native open/close, which is a perfectly good answer. */
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  .faq-item::details-content {
+    block-size: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition:
+      block-size 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.25s ease,
+      content-visibility 0.3s allow-discrete;
+  }
+  .faq-item[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
 }
 
 @layer utilities {
@@ -178,13 +235,21 @@
     transform: none;
   }
 
-  /* Soft brand glow behind hero / CTA artwork. */
+  /* Soft brand glow behind hero / CTA artwork. Two lobes — indigo above, green
+     below — so the glow says "structure and progress" rather than just tinting
+     the corner. */
   .brand-glow {
-    background-image: radial-gradient(
-      60% 60% at 50% 40%,
-      color-mix(in oklch, var(--brand-from), transparent 78%),
-      transparent 70%
-    );
+    background-image:
+      radial-gradient(
+        50% 50% at 42% 28%,
+        color-mix(in oklch, var(--brand-from), transparent 76%),
+        transparent 72%
+      ),
+      radial-gradient(
+        45% 45% at 72% 78%,
+        color-mix(in oklch, var(--success), transparent 82%),
+        transparent 70%
+      );
   }
 
   /* Faint dot grid — adds depth to large empty sections without noise. */
@@ -194,6 +259,54 @@
       transparent 1px
     );
     background-size: 22px 22px;
+  }
+
+  /* Standard hover for anything card-shaped and clickable. One utility rather
+     than five hand-rolled variants, so a card behaves the same on every page. */
+  .lift {
+    transition:
+      transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.25s ease,
+      background-color 0.25s ease;
+  }
+  .lift:hover {
+    transform: translateY(-3px);
+  }
+
+  /* A chain cell landing. Used when a link is added to a streak — on the
+     interactive hero, and when the feature-grid chain draws itself in. */
+  .animate-cell-pop {
+    animation: cell-pop 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  /* Slow drift for the floating stake chip, so the hero isn't dead still. */
+  .animate-drift {
+    animation: drift 7s ease-in-out infinite;
+  }
+}
+
+@keyframes cell-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  65% {
+    transform: scale(1.18);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
   }
 }
 
@@ -213,5 +326,15 @@
   .reveal {
     opacity: 1;
     transform: none;
+  }
+  /* Without the transition the lift becomes an instant jump, which is the
+     thing reduced-motion is asking us not to do. The hover ring/shadow still
+     signals the affordance. */
+  .lift:hover {
+    transform: none;
+  }
+  /* `::details-content` isn't matched by the `*` rule above. */
+  .faq-item::details-content {
+    transition: none;
   }
 }

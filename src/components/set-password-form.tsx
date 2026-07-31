@@ -72,7 +72,7 @@ export function SetPasswordForm({
   if (status === "done") {
     return (
       <div className="flex flex-col items-center gap-3 text-center">
-        <span className="bg-success/10 text-success flex size-14 items-center justify-center rounded-2xl">
+        <span className="bg-success/10 text-success-ink flex size-14 items-center justify-center rounded-2xl">
           <CheckCircle2 className="size-7" aria-hidden />
         </span>
         <p className="font-medium">Password saved</p>

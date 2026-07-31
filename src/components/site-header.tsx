@@ -1,6 +1,5 @@
 import { Wordmark } from "@/components/brand";
 import { SiteHeaderCta } from "@/components/site-header-cta";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 const links = [
   { href: "#how-it-works", label: "How it works" },
@@ -11,6 +10,9 @@ const links = [
 /**
  * Marketing nav. Sticky so the primary CTA is reachable from any scroll depth —
  * on mobile the section links collapse away and the CTA stays.
+ *
+ * No theme switch: dark mode is an account feature, and it lives in one place,
+ * the picker on /account. A visitor who hasn't signed up has nothing to toggle.
  */
 export function SiteHeader() {
   return (
@@ -26,7 +28,9 @@ export function SiteHeader() {
             <a
               key={href}
               href={href}
-              className="hover:text-foreground rounded-sm transition-colors"
+              // The underline grows from the left on hover — a nav link that
+              // only changes colour is easy to miss mid-scroll.
+              className="hover:text-foreground relative rounded-sm py-1 transition-colors after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-current after:transition-transform after:duration-300 hover:after:scale-x-100"
             >
               {label}
             </a>
@@ -34,7 +38,6 @@ export function SiteHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
-          <ThemeToggle />
           <SiteHeaderCta />
         </div>
       </div>

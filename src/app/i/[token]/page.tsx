@@ -26,7 +26,6 @@ import {
 } from "@/lib/challenges";
 import { fetchInviteCard, UUID_RE, type InviteView } from "@/lib/invite";
 import { Wordmark } from "@/components/brand";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { BuddyReactions, CheerPrompt } from "@/components/buddy-reactions";
 import { parsePendingReaction } from "@/lib/reactions";
 import { ChainGrid } from "@/components/chain-grid";
@@ -254,20 +253,17 @@ export default async function InvitePage({
       <header className="bg-background/80 sticky top-0 z-50 w-full border-b backdrop-blur-md">
         <div className="mx-auto flex h-16 w-full max-w-3xl items-center justify-between px-5 sm:px-8">
           <Wordmark />
-          <div className="flex items-center gap-2">
+          <span
+            className="text-success-ink ring-success/25 bg-success/10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1"
+            title="This page updates as they check in"
+          >
             <span
-              className="text-muted-foreground inline-flex items-center gap-1.5 text-xs"
-              title="This page updates as they check in"
-            >
-              <span
-                className="bg-success size-1.5 animate-pulse rounded-full"
-                aria-hidden
-              />
-              Live
-              <Eye className="size-3.5" aria-hidden />
-            </span>
-            <ThemeToggle />
-          </div>
+              className="bg-success size-1.5 animate-pulse rounded-full"
+              aria-hidden
+            />
+            Live
+            <Eye className="size-3.5" aria-hidden />
+          </span>
         </div>
       </header>
 
@@ -304,7 +300,7 @@ export default async function InvitePage({
               {view.end_date ? ` – ${formatDay(view.end_date)}` : ""}
             </span>
             {periodIndex !== null && ev.totalPeriods !== null && (
-              <span className="text-primary bg-primary/10 inline-flex items-center rounded-full px-2.5 py-1 font-medium">
+              <span className="text-success-ink bg-success/12 inline-flex items-center rounded-full px-2.5 py-1 font-medium">
                 {`${noun.one[0].toUpperCase()}${noun.one.slice(1)} ${periodIndex} of ${ev.totalPeriods}`}
               </span>
             )}
@@ -314,12 +310,14 @@ export default async function InvitePage({
         {/* The stake is the drama — it's why a buddy cares at all */}
         {view.stake_text && (
           <section aria-label="What's on the line" className="mt-5">
-            <div className="ring-primary/25 from-primary/10 via-primary/[0.05] flex items-start gap-3.5 rounded-2xl bg-gradient-to-r to-transparent px-4 py-4 ring-1 sm:px-5">
-              <span className="bg-primary/15 text-primary flex size-11 shrink-0 items-center justify-center rounded-xl">
+            {/* Amber, matching the owner view: the stake is what a watcher is
+                here to hold over them. */}
+            <div className="ring-cheer/40 from-cheer/20 via-cheer/[0.08] flex items-start gap-3.5 rounded-2xl bg-gradient-to-r to-transparent px-4 py-4 ring-1 sm:px-5">
+              <span className="bg-cheer/25 text-cheer-ink flex size-11 shrink-0 items-center justify-center rounded-xl">
                 <HandCoins className="size-5" aria-hidden />
               </span>
               <div className="flex min-w-0 flex-col gap-0.5">
-                <p className="text-primary text-[0.7rem] font-semibold tracking-widest uppercase">
+                <p className="text-cheer-ink text-[0.7rem] font-semibold tracking-widest uppercase">
                   On the line
                 </p>
                 <p className="text-base font-semibold text-pretty sm:text-lg">
@@ -414,7 +412,7 @@ export default async function InvitePage({
         >
           <Card size="sm">
             <CardContent className="flex flex-col gap-0.5">
-              <span className="text-primary flex items-center gap-1">
+              <span className="text-success-ink flex items-center gap-1">
                 <Flame className="size-4" aria-hidden />
                 <span className="text-2xl font-bold tabular-nums">
                   {ev.streak}
@@ -429,7 +427,7 @@ export default async function InvitePage({
           <Card size="sm">
             <CardContent className="flex flex-col gap-0.5">
               <span className="flex items-center gap-1">
-                <Trophy className="text-primary size-4" aria-hidden />
+                <Trophy className="text-success-ink size-4" aria-hidden />
                 <span className="text-2xl font-bold tabular-nums">
                   {ev.mode === "total"
                     ? ev.totalLogged.toLocaleString("en-US")
@@ -462,7 +460,7 @@ export default async function InvitePage({
                   <LifeBuoy
                     className={
                       ev.skipsLeft === 0
-                        ? "text-warning size-4"
+                        ? "text-warning-ink size-4"
                         : "text-primary size-4"
                     }
                     aria-hidden
@@ -496,8 +494,8 @@ export default async function InvitePage({
               aria-label="Challenge completion"
             >
               <div
-                className={`h-full rounded-full transition-all ${
-                  status === "failed" ? "bg-muted-foreground/40" : "bg-primary"
+                className={`h-full rounded-full transition-all duration-700 ${
+                  status === "failed" ? "bg-muted-foreground/40" : "bg-success"
                 }`}
                 style={{ width: `${ev.percent}%` }}
               />
@@ -546,7 +544,7 @@ export default async function InvitePage({
                   key={row.date}
                   className="ring-foreground/10 flex items-start gap-3 rounded-lg px-3 py-2 ring-1"
                 >
-                  <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold">
+                  <span className="bg-success/12 text-success-ink flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold">
                     {formatDay(row.date)}
                   </span>
                   <div className="flex min-w-0 flex-col">

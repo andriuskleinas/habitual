@@ -268,7 +268,7 @@ export default async function DashboardPage() {
                 </Button>
               )}
               {!nextUp && liveNow.length > 0 && (
-                <span className="text-success ring-success/25 bg-success/[0.07] inline-flex items-center gap-1.5 self-start rounded-full px-3 py-1.5 text-sm font-medium ring-1 sm:ml-auto sm:self-center">
+                <span className="text-success-ink ring-success/25 bg-success/[0.07] inline-flex items-center gap-1.5 self-start rounded-full px-3 py-1.5 text-sm font-medium ring-1 sm:ml-auto sm:self-center">
                   <PartyPopper className="size-4" aria-hidden />
                   Day cleared
                 </span>
@@ -381,7 +381,7 @@ export default async function DashboardPage() {
 
                 return (
                   <li key={c.id}>
-                    <Card className="hover:ring-primary/40 relative h-full transition-all hover:shadow-md hover:-translate-y-0.5">
+                    <Card className="hover:ring-primary/40 lift relative h-full hover:shadow-md">
                       <CardContent className="flex h-full flex-col gap-3">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex min-w-0 flex-col gap-0.5">
@@ -405,7 +405,7 @@ export default async function DashboardPage() {
 
                         {/* Being a buddy is a job, not a spectator seat — say
                             what the job is. */}
-                        <p className="text-primary mt-auto inline-flex items-center gap-1.5 pt-1 text-xs font-medium">
+                        <p className="text-cheer-ink mt-auto inline-flex items-center gap-1.5 pt-1 text-xs font-medium">
                           <Heart className="size-3.5" aria-hidden />
                           {ev.dueNow ? "Nudge them" : "Send a cheer"}
                         </p>
@@ -459,8 +459,11 @@ function StatTile({
   hint?: string;
 }) {
   return (
-    <div className="bg-card ring-foreground/10 flex flex-col gap-0.5 rounded-xl px-4 py-3 ring-1">
-      <span className="text-primary flex items-center gap-1.5">
+    <div className="bg-card ring-foreground/10 lift hover:ring-success/30 flex flex-col gap-0.5 rounded-xl px-4 py-3 ring-1">
+      {/* Green, not brand indigo: every number in this row is a kept
+          commitment, and that's the colour a kept commitment has everywhere
+          else in the app. */}
+      <span className="text-success-ink flex items-center gap-1.5">
         {icon}
         <span className="text-xl font-bold tabular-nums sm:text-2xl">{value}</span>
       </span>
@@ -483,9 +486,9 @@ function TodayRing({ done, total }: { done: number; total: number }) {
     <div
       role="img"
       aria-label={`${done} of ${total} live challenges covered`}
-      className="relative grid size-18 shrink-0 place-items-center rounded-full"
+      className="relative grid size-18 shrink-0 place-items-center rounded-full transition-all duration-700"
       style={{
-        background: `conic-gradient(var(--primary) ${degrees}deg, color-mix(in oklch, var(--muted-foreground), transparent 85%) 0deg)`,
+        background: `conic-gradient(var(--success) ${degrees}deg, color-mix(in oklch, var(--muted-foreground), transparent 85%) 0deg)`,
       }}
     >
       <span className="bg-card absolute inset-[7px] rounded-full" />
@@ -505,8 +508,8 @@ function ActivityTile({
   days: { date: string; count: number }[];
 }) {
   return (
-    <div className="bg-card ring-foreground/10 col-span-2 flex flex-col gap-2 rounded-xl px-4 py-3 ring-1">
-      <span className="text-primary flex items-center gap-1.5">
+    <div className="bg-card ring-foreground/10 lift hover:ring-success/30 col-span-2 flex flex-col gap-2 rounded-xl px-4 py-3 ring-1">
+      <span className="text-success-ink flex items-center gap-1.5">
         <Trophy className="size-4" aria-hidden />
         <span className="text-xl font-bold tabular-nums sm:text-2xl">{total}</span>
       </span>
@@ -516,14 +519,14 @@ function ActivityTile({
             key={d.date}
             title={`${formatDay(d.date)} · ${d.count} check-in${d.count === 1 ? "" : "s"}`}
             className={cn(
-              "h-3.5 flex-1 rounded-[3px]",
+              "h-3.5 flex-1 rounded-[3px] transition-colors",
               d.count === 0
                 ? "bg-muted-foreground/15"
                 : d.count === 1
-                  ? "bg-primary/40"
+                  ? "bg-success/40"
                   : d.count === 2
-                    ? "bg-primary/70"
-                    : "bg-primary",
+                    ? "bg-success/70"
+                    : "bg-success",
             )}
           />
         ))}
@@ -541,7 +544,7 @@ function ActivityTile({
 
 function StreakPill({ streak }: { streak: number }) {
   return (
-    <span className="bg-primary/10 text-primary flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5">
+    <span className="bg-success/12 text-success-ink flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5">
       <Flame className="size-3.5" aria-hidden />
       <span className="text-sm font-semibold tabular-nums">{streak}</span>
       <span className="sr-only">day streak</span>
@@ -569,8 +572,8 @@ function ProgressBar({
     >
       <div
         className={cn(
-          "h-full rounded-full transition-all",
-          muted ? "bg-muted-foreground/40" : "bg-primary",
+          "h-full rounded-full transition-all duration-700",
+          muted ? "bg-muted-foreground/40" : "bg-success",
         )}
         style={{ width: `${percent}%` }}
       />
@@ -642,7 +645,7 @@ function ChallengeCard({
   return (
     <Card
       className={cn(
-        "hover:ring-primary/40 relative h-full transition-all hover:-translate-y-0.5 hover:shadow-md",
+        "hover:ring-primary/40 lift relative h-full hover:shadow-md",
         tone === "due" && atRisk && "ring-warning/40",
         tone === "closed" && "bg-card/60",
       )}
@@ -676,10 +679,12 @@ function ChallengeCard({
             a detail-page-only fact. */}
         {c.stake_text && (
           <p className="flex items-start gap-1.5 text-xs">
+            {/* Amber: the stake is the nudge, and it shares its colour with
+                every other nudge in the app. */}
             <HandCoins
               className={cn(
                 "mt-px size-3.5 shrink-0",
-                tone === "closed" ? "text-muted-foreground" : "text-primary",
+                tone === "closed" ? "text-muted-foreground" : "text-cheer-ink",
               )}
               aria-hidden
             />
@@ -704,7 +709,7 @@ function ChallengeCard({
                   : `${ev.donePeriods}/${ev.totalPeriods} check-ins`}
               </span>
               {atRisk ? (
-                <span className="text-warning font-medium">No skips left</span>
+                <span className="text-warning-ink font-medium">No skips left</span>
               ) : ev.skipsLeft !== null && ev.status === "active" ? (
                 <span className="tabular-nums">
                   {ev.skipsLeft} skip{ev.skipsLeft === 1 ? "" : "s"} left
@@ -723,7 +728,7 @@ function ChallengeCard({
           />
 
           {ev.status === "won" ? (
-            <span className="text-success inline-flex shrink-0 items-center gap-1 text-xs font-medium">
+            <span className="text-success-ink inline-flex shrink-0 items-center gap-1 text-xs font-medium">
               <Trophy className="size-3.5" aria-hidden />
               Completed
             </span>
@@ -736,7 +741,7 @@ function ChallengeCard({
               Not started
             </span>
           ) : !ev.dueNow ? (
-            <span className="text-success inline-flex shrink-0 items-center gap-1 text-xs font-medium">
+            <span className="text-success-ink inline-flex shrink-0 items-center gap-1 text-xs font-medium">
               <CheckCircle2 className="size-3.5" aria-hidden />
               {loggedToday ? "Logged today" : "Covered"}
             </span>

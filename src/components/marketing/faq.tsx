@@ -30,18 +30,27 @@ export const FAQS = [
 /**
  * Native `<details>` accordion: keyboard-operable, screen-reader friendly and
  * findable by in-page search, with no JavaScript.
+ *
+ * The open/close slide is pure CSS (`.faq-item`, see globals.css) and purely
+ * decorative — where `::details-content` transitions aren't supported the panel
+ * simply appears, which is the native behaviour and perfectly fine.
  */
 export function Faq() {
   return (
-    <div className="divide-border border-border divide-y rounded-2xl border">
+    <div className="divide-border border-border bg-card divide-y rounded-2xl border">
       {FAQS.map(({ q, a }) => (
-        <details key={q} className="group px-5 py-1 first:rounded-t-2xl last:rounded-b-2xl">
+        <details
+          key={q}
+          className="faq-item group hover:bg-muted/40 px-5 py-1 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+        >
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left font-medium">
             {q}
-            <Plus
-              className="text-muted-foreground size-5 shrink-0 transition-transform duration-200 group-open:rotate-45"
-              aria-hidden
-            />
+            <span className="bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary group-open:bg-primary/10 group-open:text-primary flex size-7 shrink-0 items-center justify-center rounded-full transition-colors">
+              <Plus
+                className="size-4 transition-transform duration-300 group-open:rotate-45"
+                aria-hidden
+              />
+            </span>
           </summary>
           <p className="text-muted-foreground pb-4 text-pretty">{a}</p>
         </details>

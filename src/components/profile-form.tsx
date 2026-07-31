@@ -115,7 +115,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         <SubmitButton dirty={dirty} />
         {state.ok && !dirty && (
           <span
-            className="text-success inline-flex items-center gap-1.5 text-sm font-medium"
+            className="text-success-ink inline-flex items-center gap-1.5 text-sm font-medium"
             role="status"
           >
             <Check className="size-4" aria-hidden />
