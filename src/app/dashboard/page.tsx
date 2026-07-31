@@ -17,6 +17,7 @@ import {
   formatCount,
   todayISO,
 } from "@/lib/challenges";
+import { displayName } from "@/lib/profile";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,7 +38,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("name, email, password_set_at")
+    .select("name, surname, nickname, email, password_set_at")
     .eq("id", user.id)
     .single();
 
@@ -61,7 +62,12 @@ export default async function DashboardPage() {
     .eq("status", "claimed")
     .order("created_at", { ascending: false });
 
-  const displayName = profile?.name ?? user.email?.split("@")[0] ?? "there";
+  const names = {
+    name: profile?.name ?? null,
+    surname: profile?.surname ?? null,
+    nickname: profile?.nickname ?? null,
+    email: user.email ?? profile?.email ?? null,
+  };
   const today = todayISO();
   const list = challenges ?? [];
   const buddyList = (buddyRows ?? []).flatMap((b) => {
@@ -105,20 +111,32 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <AppHeader />
+      <AppHeader profile={names} />
 
       <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-5 py-8 sm:px-8 sm:py-12">
-        <section className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Hey {displayName} 👋
-          </h1>
-          <p className="text-muted-foreground text-pretty">
-            {list.length === 0
-              ? "Your challenges will live here."
-              : waiting === 0
-                ? "Nothing owing right now. Nice work."
-                : `${waiting} challenge${waiting === 1 ? "" : "s"} waiting on you.`}
-          </p>
+        <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Hey {displayName(names)} 👋
+            </h1>
+            <p className="text-muted-foreground text-pretty">
+              {list.length === 0
+                ? "Your challenges will live here."
+                : waiting === 0
+                  ? "Nothing owing right now. Nice work."
+                  : `${waiting} challenge${waiting === 1 ? "" : "s"} waiting on you.`}
+            </p>
+          </div>
+          {/* Starting a challenge used to hide in the header on every page; it
+              belongs here, where it's the actual job. */}
+          {list.length > 0 && (
+            <Button size="lg" className="sm:shrink-0" asChild>
+              <Link href="/challenges/new">
+                <Plus className="size-4" aria-hidden />
+                New challenge
+              </Link>
+            </Button>
+          )}
         </section>
 
         {/* Magic-link-only accounts: one dismissible-feeling nudge toward a
@@ -165,19 +183,9 @@ export default async function DashboardPage() {
         )}
 
         <section className="mt-10 flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
-              My challenges
-            </h2>
-            {list.length > 0 && (
-              <Button size="sm" variant="outline" asChild>
-                <Link href="/challenges/new">
-                  <Plus className="size-4" aria-hidden />
-                  New
-                </Link>
-              </Button>
-            )}
-          </div>
+          <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
+            My challenges
+          </h2>
 
           {list.length === 0 ? (
             <Card className="border-border/60 border-dashed">
@@ -365,7 +373,10 @@ export default async function DashboardPage() {
         )}
 
         <footer className="text-muted-foreground mt-16 border-t pt-6 text-center text-xs">
-          Signed in as {user.email}
+          Signed in as {user.email} ·{" "}
+          <Link href="/account" className="hover:text-foreground underline">
+            Profile &amp; settings
+          </Link>
         </footer>
       </main>
     </>

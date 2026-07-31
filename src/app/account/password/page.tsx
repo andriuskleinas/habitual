@@ -27,7 +27,7 @@ export default async function PasswordPage({
 
   const { data: profile } = await supabase
     .from("users")
-    .select("password_set_at")
+    .select("name, surname, nickname, email, password_set_at")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -36,7 +36,7 @@ export default async function PasswordPage({
 
   return (
     <>
-      <AppHeader />
+      <AppHeader profile={profile ?? { email: user.email }} />
 
       <main
         id="main"

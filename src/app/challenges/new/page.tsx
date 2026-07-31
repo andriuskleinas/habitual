@@ -16,9 +16,15 @@ export default async function NewChallengePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/challenges/new");
 
+  const { data: profile } = await supabase
+    .from("users")
+    .select("name, surname, nickname, email")
+    .eq("id", user.id)
+    .maybeSingle();
+
   return (
     <>
-      <AppHeader showNew={false} />
+      <AppHeader profile={profile ?? { email: user.email }} />
 
       <main
         id="main"

@@ -1,37 +1,34 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { CheckCircle2, Loader2, Pencil } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { logCheckIn, type LogCheckInState } from "@/app/challenges/actions";
-import { celebrateCheckIn } from "@/lib/confetti";
+import { celebrationKey } from "@/lib/confetti";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-type TodayCheckIn = { value: number; note: string | null };
-
-function SubmitButton({ doneToday }: { doneToday: boolean }) {
+function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="lg" className="w-full" disabled={pending}>
+    <Button type="submit" size="xl" className="w-full" disabled={pending}>
       {pending ? (
-        <Loader2 className="size-4 animate-spin" />
-      ) : doneToday ? (
-        <Pencil className="size-4" />
+        <Loader2 className="size-5 animate-spin" aria-hidden />
       ) : (
-        <CheckCircle2 className="size-4" />
+        <CheckCircle2 className="size-5" aria-hidden />
       )}
-      {pending
-        ? "Saving…"
-        : doneToday
-          ? "Update today's log"
-          : "Mark today done"}
+      {pending ? "Saving…" : "Mark today done"}
     </Button>
   );
 }
 
+/**
+ * Today's check-in. Only rendered while today is still unlogged — a day counts
+ * once, so there is no edit mode; the server rejects a second insert on the
+ * unique (challenge, date) constraint either way.
+ */
 export function CheckInForm({
   challengeId,
   dailyTarget,
@@ -39,7 +36,6 @@ export function CheckInForm({
   targetUnit,
   suggested,
   today,
-  streak,
 }: {
   challengeId: string;
   dailyTarget: number;
@@ -48,30 +44,30 @@ export function CheckInForm({
   targetUnit?: string | null;
   /** Even-pace amount for this check-in, on a total challenge. */
   suggested?: number | null;
-  today: TodayCheckIn | null;
-  /** Streak as of this render — used to size the milestone confetti burst. */
-  streak: number;
+  /** Today as `YYYY-MM-DD`, used to hand the celebration to the done card. */
+  today: string;
 }) {
   const [state, formAction] = useActionState<LogCheckInState, FormData>(
     logCheckIn,
     {},
   );
-  const doneToday = today !== null;
   const isTotal = !!totalTarget;
   const tracksNumber = dailyTarget > 1 || isTotal;
 
-  // Fire the celebration whenever a check-in succeeds. `state` is a fresh object
-  // per action, so this runs once per successful log (never on mount, since the
-  // initial state has no `ok`). Logging a *new* day advances the streak by one;
-  // re-logging the same day keeps it, so project accordingly for milestones.
-  useEffect(() => {
-    if (state.ok) {
-      void celebrateCheckIn(doneToday ? streak : streak + 1);
+  // A successful log revalidates the page and this form is replaced by the
+  // "done for today" card — which may unmount us before any effect here could
+  // run. So we leave a note for that card to pick up and celebrate with.
+  function submit(formData: FormData) {
+    try {
+      sessionStorage.setItem(celebrationKey(challengeId), today);
+    } catch {
+      // Blocked storage just means no confetti; the check-in still lands.
     }
-  }, [state, doneToday, streak]);
+    formAction(formData);
+  }
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form action={submit} className="flex flex-col gap-4">
       <input type="hidden" name="challenge_id" value={challengeId} />
 
       {tracksNumber ? (
@@ -94,7 +90,7 @@ export function CheckInForm({
               inputMode="numeric"
               min={0}
               max={100000}
-              defaultValue={today?.value ?? (isTotal ? (suggested ?? 1) : dailyTarget)}
+              defaultValue={isTotal ? (suggested ?? 1) : dailyTarget}
             />
             {targetUnit && (
               <span className="text-muted-foreground shrink-0 text-sm">
@@ -117,7 +113,6 @@ export function CheckInForm({
           placeholder="How did it go?"
           maxLength={280}
           rows={2}
-          defaultValue={today?.note ?? ""}
         />
       </div>
 
@@ -126,8 +121,16 @@ export function CheckInForm({
           {state.error}
         </p>
       )}
+      {state.alreadyLogged && (
+        <p className="text-muted-foreground text-sm" role="status">
+          Today&apos;s already in the books. Refresh to see it.
+        </p>
+      )}
 
-      <SubmitButton doneToday={doneToday} />
+      <SubmitButton />
+      <p className="text-muted-foreground text-center text-xs">
+        One check-in a day — make it count.
+      </p>
     </form>
   );
 }

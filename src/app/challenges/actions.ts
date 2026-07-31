@@ -168,7 +168,12 @@ export async function createChallenge(
   redirect(`/challenges/${data.id}`);
 }
 
-export type LogCheckInState = { error?: string; ok?: boolean };
+export type LogCheckInState = {
+  error?: string;
+  ok?: boolean;
+  /** Set when the day was already logged — the UI says so rather than erroring. */
+  alreadyLogged?: boolean;
+};
 
 export async function logCheckIn(
   _prev: LogCheckInState,
@@ -193,20 +198,24 @@ export async function logCheckIn(
 
   const date = todayISO();
 
-  // One check-in per challenge per day: upsert on the (challenge_id, date)
-  // unique constraint so a re-log updates today's entry rather than erroring.
-  const { error } = await supabase.from("check_ins").upsert(
-    {
-      challenge_id: challengeId,
-      user_id: user.id,
-      date,
-      value: Math.round(value),
-      note: note || null,
-    },
-    { onConflict: "challenge_id,date" },
-  );
+  // Today counts once. A plain INSERT (not an upsert) leans on the existing
+  // unique(challenge_id, date) constraint, so a double submit — or two tabs
+  // racing — is rejected by the database rather than quietly rewriting a day
+  // that's already in the books. That's the whole point of a streak: you don't
+  // get to go back and edit it.
+  const { error } = await supabase.from("check_ins").insert({
+    challenge_id: challengeId,
+    user_id: user.id,
+    date,
+    value: Math.round(value),
+    note: note || null,
+  });
 
   if (error) {
+    if (error.code === "23505") {
+      revalidatePath(`/challenges/${challengeId}`);
+      return { alreadyLogged: true };
+    }
     return { error: error.message };
   }
 

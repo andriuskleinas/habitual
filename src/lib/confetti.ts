@@ -57,3 +57,14 @@ export async function celebrateCheckIn(streak = 0): Promise<void> {
 }
 
 const MILESTONES = new Set([7, 21, 30, 66, 90, 100]);
+
+/**
+ * sessionStorage key used to hand a pending celebration from the check-in form
+ * to the "done for today" card that replaces it. The form can't fire the
+ * confetti itself: a successful log revalidates the page and unmounts it,
+ * potentially before any effect runs. The value stored is the check-in date, so
+ * a stale flag from another day is ignored rather than misfiring.
+ */
+export function celebrationKey(challengeId: string): string {
+  return `habitual:celebrate:${challengeId}`;
+}

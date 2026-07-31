@@ -26,6 +26,7 @@ import {
 } from "@/lib/challenges";
 import { AppHeader } from "@/components/app-header";
 import { CheckInForm } from "@/components/check-in-form";
+import { TodayDone } from "@/components/today-done";
 import { ShareInvite } from "@/components/share-invite";
 import { ReactionsFeed, type ReactionItem } from "@/components/reactions-feed";
 
@@ -43,6 +44,12 @@ export default async function ChallengeDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect(`/login?next=/challenges/${id}`);
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("name, surname, nickname, email")
+    .eq("id", user.id)
+    .maybeSingle();
 
   const { data: challenge } = await supabase
     .from("challenges")
@@ -102,10 +109,12 @@ export default async function ChallengeDetailPage({
   const periods = schedulePeriods({ ...rules, today });
   const todayRow = rows.find((r) => r.date === today) ?? null;
   const doneSet = new Set(dates);
+  // The next slot that opens after today — what the "done" card points at.
+  const nextPeriod = periods.find((p) => p.start > today) ?? null;
 
   return (
     <>
-      <AppHeader />
+      <AppHeader profile={profile ?? { email: user.email }} />
 
       <main
         id="main"
@@ -175,6 +184,27 @@ export default async function ChallengeDetailPage({
               Send your buddy the link in the meantime.
             </p>
           </div>
+        )}
+
+        {/* The stake is the reason any of this works, so it gets the loudest
+            slot on the page — full width, directly under the title, above the
+            fold on a phone. It used to sit in the sidebar, below the QR code. */}
+        {challenge.stake_text && (
+          <section aria-label="What's on the line" className="mt-6">
+            <div className="ring-primary/25 from-primary/10 via-primary/[0.05] flex items-start gap-3.5 rounded-2xl bg-gradient-to-r to-transparent px-4 py-4 ring-1 sm:px-5">
+              <span className="bg-primary/15 text-primary flex size-11 shrink-0 items-center justify-center rounded-xl">
+                <HandCoins className="size-5" aria-hidden />
+              </span>
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <p className="text-primary text-[0.7rem] font-semibold tracking-widest uppercase">
+                  On the line
+                </p>
+                <p className="text-base font-semibold text-pretty sm:text-lg">
+                  {challenge.stake_text}
+                </p>
+              </div>
+            </div>
+          </section>
         )}
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
@@ -280,27 +310,41 @@ export default async function ChallengeDetailPage({
               )}
             </section>
 
-            {/* Today's check-in (owner only) */}
+            {/* Today's check-in (owner only). One per day: once it's logged the
+                form is gone for good, replaced by the receipt. */}
             {isOwner && ev.status === "active" ? (
               <section className="flex flex-col gap-3">
                 <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
-                  {todayRow ? "Today — logged ✓" : "Log today"}
+                  {todayRow ? "Today" : "Log today"}
                 </h2>
-                <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
-                  <CheckInForm
+                {todayRow ? (
+                  <TodayDone
                     challengeId={challenge.id}
-                    dailyTarget={challenge.daily_target}
-                    totalTarget={challenge.total_target}
-                    targetUnit={challenge.target_unit}
-                    suggested={ev.perCheckInToFinish}
-                    today={
-                      todayRow
-                        ? { value: todayRow.value, note: todayRow.note }
+                    date={today}
+                    streak={ev.streak}
+                    streakNoun={ev.streak === 1 ? noun.one : noun.many}
+                    value={todayRow.value}
+                    note={todayRow.note}
+                    showValue={ev.mode !== "tick"}
+                    unit={challenge.target_unit}
+                    nextDue={
+                      nextPeriod
+                        ? formatDay(nextPeriod.start, { weekday: true })
                         : null
                     }
-                    streak={ev.streak}
                   />
-                </div>
+                ) : (
+                  <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
+                    <CheckInForm
+                      challengeId={challenge.id}
+                      dailyTarget={challenge.daily_target}
+                      totalTarget={challenge.total_target}
+                      targetUnit={challenge.target_unit}
+                      suggested={ev.perCheckInToFinish}
+                      today={today}
+                    />
+                  </div>
+                )}
               </section>
             ) : isOwner ? null : (
               <section>
@@ -364,47 +408,6 @@ export default async function ChallengeDetailPage({
 
           {/* ---------------- Sidebar ---------------- */}
           <aside className="flex flex-col gap-6">
-            {/* Wiggle room, as a running balance — the number that actually
-                changes how today feels. */}
-            {(ev.skipsAllowed !== null || ev.maxMissesInRow !== null) && (
-              <div className="ring-foreground/10 flex flex-col gap-2 rounded-xl px-4 py-3 ring-1">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-1.5 text-sm font-medium">
-                    <LifeBuoy className="text-muted-foreground size-4" aria-hidden />
-                    Wiggle room
-                  </span>
-                  {ev.skipsLeft !== null && (
-                    <span
-                      className={`text-sm font-semibold tabular-nums ${
-                        ev.skipsLeft === 0 ? "text-warning" : "text-foreground"
-                      }`}
-                    >
-                      {ev.skipsLeft} left
-                    </span>
-                  )}
-                </div>
-                <p className="text-muted-foreground text-xs text-pretty">
-                  {describeAllowance({
-                    skipsAllowed: ev.skipsAllowed,
-                    maxMissesInRow: ev.maxMissesInRow,
-                    cadence: challenge.cadence,
-                  })}{" "}
-                  {ev.missedPeriods > 0 &&
-                    `Missed ${ev.missedPeriods} so far.`}
-                </p>
-              </div>
-            )}
-
-            {challenge.stake_text && (
-              <div className="bg-accent/60 text-accent-foreground flex items-start gap-2.5 rounded-xl px-4 py-3">
-                <HandCoins className="mt-0.5 size-4 shrink-0" aria-hidden />
-                <p className="text-sm text-pretty">
-                  <span className="font-medium">On the line: </span>
-                  {challenge.stake_text}
-                </p>
-              </div>
-            )}
-
             {isOwner && inviteToken && (
               <ShareInvite
                 path={`/i/${inviteToken}`}
@@ -420,6 +423,40 @@ export default async function ChallengeDetailPage({
                 </h2>
                 <ReactionsFeed reactions={reactions} />
               </section>
+            )}
+
+            {/* The rules you set, as a running balance. Kept quiet and last on
+                purpose: it's reference material, and dressing a skip budget up
+                as a headline just advertises the way out. */}
+            {(ev.skipsAllowed !== null || ev.maxMissesInRow !== null) && (
+              <p className="text-muted-foreground flex items-start gap-2 text-xs text-pretty">
+                <LifeBuoy className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                <span>
+                  <span className="text-foreground/80 font-medium">
+                    Wiggle room:
+                  </span>{" "}
+                  {ev.skipsLeft !== null && (
+                    <>
+                      <span
+                        className={
+                          ev.skipsLeft === 0
+                            ? "text-warning font-semibold tabular-nums"
+                            : "font-semibold tabular-nums"
+                        }
+                      >
+                        {ev.skipsLeft} left
+                      </span>
+                      {" · "}
+                    </>
+                  )}
+                  {describeAllowance({
+                    skipsAllowed: ev.skipsAllowed,
+                    maxMissesInRow: ev.maxMissesInRow,
+                    cadence: challenge.cadence,
+                  })}{" "}
+                  {ev.missedPeriods > 0 && `Missed ${ev.missedPeriods} so far.`}
+                </span>
+              </p>
             )}
           </aside>
         </div>

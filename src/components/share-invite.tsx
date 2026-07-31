@@ -59,27 +59,37 @@ export function ShareInvite({
   }
 
   return (
-    <div className="border-border/60 flex flex-col items-center gap-4 rounded-xl border border-dashed px-5 py-6">
-      <div className="flex flex-col items-center gap-1 text-center">
-        <p className="font-medium">Invite your buddy</p>
-        <p className="text-muted-foreground text-sm text-pretty">
-          Share this link. They can watch your progress live — no account
-          needed.
-        </p>
+    <div className="border-border/60 flex flex-col gap-3 rounded-xl border border-dashed px-4 py-4">
+      {/* The QR used to be the size of the card and pushed everything else
+          below the fold. Sending a link is the common case, so the code shrinks
+          to a thumbnail beside the copy and the buttons get a full-width row of
+          their own. Still dark-on-white in both themes so it always scans. */}
+      <div className="flex items-center gap-3">
+        <span className="shrink-0 rounded-lg bg-white p-1.5">
+          <QRCodeSVG value={url} size={104} marginSize={1} level="M" />
+        </span>
+
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <p className="text-sm font-medium">Invite your buddy</p>
+          <p className="text-muted-foreground text-xs text-pretty">
+            Scan it or send the link — they watch live, no account needed.
+          </p>
+          <p className="text-muted-foreground truncate text-[0.7rem]">
+            {url.replace(/^https?:\/\//, "")}
+          </p>
+        </div>
       </div>
 
-      {/* QR stays dark-on-white in both themes so it always scans. */}
-      <div className="rounded-xl bg-white p-3">
-        <QRCodeSVG value={url} size={148} marginSize={0} level="M" />
-      </div>
-
-      <div className="bg-muted text-muted-foreground w-full truncate rounded-lg px-3 py-2 text-center text-xs">
-        {url.replace(/^https?:\/\//, "")}
-      </div>
-
-      <div className="flex w-full gap-2">
+      <div className="flex gap-2">
+        {canShare && (
+          <Button type="button" size="sm" className="flex-1" onClick={share}>
+            <Share2 className="size-4" />
+            Share
+          </Button>
+        )}
         <Button
           type="button"
+          size="sm"
           variant="outline"
           className="flex-1"
           onClick={copy}
@@ -96,12 +106,6 @@ export function ShareInvite({
             </>
           )}
         </Button>
-        {canShare && (
-          <Button type="button" className="flex-1" onClick={share}>
-            <Share2 className="size-4" />
-            Share
-          </Button>
-        )}
       </div>
     </div>
   );
