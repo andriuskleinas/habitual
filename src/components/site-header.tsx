@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { Wordmark } from "@/components/brand";
+import { SiteHeaderCta } from "@/components/site-header-cta";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
 
 const links = [
   { href: "#how-it-works", label: "How it works" },
@@ -36,12 +35,7 @@ export function SiteHeader() {
 
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
           <ThemeToggle />
-          <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
-            <Link href="/login">Sign in</Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link href="/signup">Start free</Link>
-          </Button>
+          <SiteHeaderCta />
         </div>
       </div>
     </header>

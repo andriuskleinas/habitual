@@ -23,7 +23,10 @@ export function AppHeader({
   return (
     <header className="bg-background/80 sticky top-0 z-50 w-full border-b backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-5xl items-center gap-2 px-5 sm:px-8">
-        <Wordmark href="/dashboard" />
+        {/* The mark goes to the marketing home, the way a logo does everywhere
+            else on the web — the dashboard is one tap back via the header's
+            Dashboard button once you're there. */}
+        <Wordmark />
 
         <Link
           href="/account"
