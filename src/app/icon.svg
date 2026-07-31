@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Habitual">
+  <defs>
+    <linearGradient id="habitual-brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#344EAD" />
+      <stop offset="1" stop-color="#0486D3" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#habitual-brand)" />
+  <path
+    transform="translate(9 8.31) scale(0.46)"
+    fill="#fff"
+    d="M0 13.55A13.55 13.55 0 0 1 27.1 13.55L27.1 42.2A22.9 22.9 0 0 0 72.9 42.2L72.9 13.55A13.55 13.55 0 0 1 100 13.55L100 89.45A13.55 13.55 0 0 1 72.9 89.45A22.9 11 0 0 0 27.1 89.45A13.55 13.55 0 0 1 0 89.45ZM37 42.5a13 13 0 1 0 26 0a13 13 0 1 0-26 0Z"
+  />
+</svg>

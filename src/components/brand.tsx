@@ -1,8 +1,21 @@
 import Link from "next/link";
-import { Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LOGO_PATH, LOGO_VIEWBOX } from "@/lib/logo";
 
-/** The flame tile on its own — used wherever the wordmark won't fit. */
+/**
+ * The bare monogram, no tile — for anywhere that supplies its own background.
+ * Takes its colour from `currentColor`, and its size from the height it's
+ * given (the viewBox supplies the width).
+ */
+export function LogoGlyph({ className }: { className?: string }) {
+  return (
+    <svg viewBox={LOGO_VIEWBOX} fill="currentColor" aria-hidden className={className}>
+      <path d={LOGO_PATH} />
+    </svg>
+  );
+}
+
+/** The monogram tile on its own — used wherever the wordmark won't fit. */
 export function LogoMark({ className }: { className?: string }) {
   return (
     <span
@@ -11,7 +24,9 @@ export function LogoMark({ className }: { className?: string }) {
         className,
       )}
     >
-      <Flame className="size-5" aria-hidden />
+      {/* Sized as a share of the tile, so passing a bigger `size-*` above
+          scales the mark with it instead of stranding it in the middle. */}
+      <LogoGlyph className="h-[56%] w-auto" />
     </span>
   );
 }

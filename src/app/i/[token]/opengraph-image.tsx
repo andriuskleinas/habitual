@@ -7,6 +7,7 @@ import {
   todayISO,
 } from "@/lib/challenges";
 import { fetchInviteCard } from "@/lib/invite";
+import { BRAND_GRADIENT, LOGO_PATH, LOGO_VIEWBOX } from "@/lib/logo";
 
 export const alt = "A challenge on Habitual";
 export const size = { width: 1200, height: 630 };
@@ -19,7 +20,7 @@ export const contentType = "image/png";
  */
 export const revalidate = 300;
 
-const BG = "linear-gradient(135deg, #22357A 0%, #344EAD 55%, #2F7BD4 100%)";
+const BG = BRAND_GRADIENT;
 const DIM = "rgba(255,255,255,0.82)";
 
 /** Longest run of cells that still reads as a chain rather than a texture. */
@@ -144,10 +145,11 @@ export default async function InviteOpengraphImage({
                 height: "52px",
                 borderRadius: "15px",
                 background: "rgba(255,255,255,0.18)",
-                fontSize: "30px",
               }}
             >
-              🔥
+              <svg viewBox={LOGO_VIEWBOX} width={28} height={29} fill="#fff">
+                <path d={LOGO_PATH} />
+              </svg>
             </div>
             <div
               style={{

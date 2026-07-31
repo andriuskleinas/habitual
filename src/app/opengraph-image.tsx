@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { BRAND_GRADIENT, LOGO_PATH, LOGO_VIEWBOX } from "@/lib/logo";
 
 export const alt = "Habitual — build habits with a buddy watching";
 export const size = { width: 1200, height: 630 };
@@ -19,7 +20,7 @@ export default async function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "linear-gradient(135deg, #22357A 0%, #344EAD 55%, #2F7BD4 100%)",
+          background: BRAND_GRADIENT,
           padding: "72px",
           color: "white",
           fontFamily: "sans-serif",
@@ -35,10 +36,11 @@ export default async function OpengraphImage() {
               height: "56px",
               borderRadius: "16px",
               background: "rgba(255,255,255,0.18)",
-              fontSize: "32px",
             }}
           >
-            🔥
+            <svg viewBox={LOGO_VIEWBOX} width={30} height={31} fill="#fff">
+              <path d={LOGO_PATH} />
+            </svg>
           </div>
           <div style={{ fontSize: "34px", fontWeight: 600, letterSpacing: "-0.02em" }}>
             Habitual
