@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { todayISO } from "@/lib/challenges";
 import { AppHeader } from "@/components/app-header";
 import { CreateChallengeForm } from "@/components/create-challenge-form";
 
@@ -36,18 +37,19 @@ export default async function NewChallengePage() {
             New challenge
           </h1>
           <p className="text-muted-foreground text-pretty">
-            Commit to something daily. You&apos;ll invite a buddy to watch next.
+            Pick something small enough to do on a bad day. Then let someone
+            watch you do it.
           </p>
         </div>
 
         <div className="bg-card ring-foreground/10 mt-8 rounded-2xl p-5 ring-1 sm:p-6">
-          <CreateChallengeForm />
+          <CreateChallengeForm today={todayISO()} />
         </div>
 
         <p className="text-muted-foreground mt-6 flex items-start gap-2 text-sm text-pretty">
           <Users className="mt-0.5 size-4 shrink-0" aria-hidden />
-          Next step: you&apos;ll get a link to send your buddy. They can watch
-          your progress without creating an account.
+          Next up: a link to send your buddy. They can watch — and heckle —
+          without signing up.
         </p>
       </main>
     </>

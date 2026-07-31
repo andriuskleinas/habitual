@@ -8,16 +8,20 @@ import {
   Flame,
   HandCoins,
   KeyRound,
+  LifeBuoy,
   Trophy,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { claimInvite } from "./actions";
 import {
   cadenceLabel,
-  challengeProgress,
-  currentStreak,
-  longestStreak,
+  describeAllowance,
+  evaluateChallenge,
+  formatCount,
+  formatDay,
+  periodNoun,
   todayISO,
+  type AllowanceMode,
 } from "@/lib/challenges";
 import { Wordmark } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -37,9 +41,15 @@ type InviteView = {
   id: string;
   title: string;
   cadence: string;
+  cadence_weekday: number | null;
   daily_target: number;
+  total_target: number | null;
+  target_unit: string | null;
   start_date: string;
   end_date: string | null;
+  allowance_mode: AllowanceMode | null;
+  allowance_value: number | null;
+  max_misses_in_row: number | null;
   stake_text: string | null;
   owner_name: string | null;
   invite_status: string;
@@ -52,14 +62,6 @@ type InviteView = {
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function formatDay(date: string): string {
-  return new Date(`${date}T00:00:00.000Z`).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
 
 export default async function InvitePage({
   params,
@@ -119,14 +121,22 @@ export default async function InvitePage({
   const dates = rows.map((r) => r.date);
   const today = todayISO();
 
-  const streak = currentStreak(dates, today);
-  const best = longestStreak(dates);
-  const progress = challengeProgress({
-    startDate: view.start_date,
-    endDate: view.end_date,
-    completedDays: new Set(dates).size,
+  const ev = evaluateChallenge(
+    {
+      cadence: view.cadence,
+      cadenceWeekday: view.cadence_weekday,
+      startDate: view.start_date,
+      endDate: view.end_date,
+      allowanceMode: view.allowance_mode,
+      allowanceValue: view.allowance_value,
+      maxMissesInRow: view.max_misses_in_row,
+      dailyTarget: view.daily_target,
+      totalTarget: view.total_target,
+    },
+    rows,
     today,
-  });
+  );
+  const noun = periodNoun(view.cadence);
   const owner = view.owner_name ?? "Someone";
   const loggedToday = dates.includes(today);
 
@@ -162,7 +172,8 @@ export default async function InvitePage({
           <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
             <CalendarDays className="size-3.5" aria-hidden />
             <span>
-              {cadenceLabel(view.cadence)} · {formatDay(view.start_date)}
+              {cadenceLabel(view.cadence, view.cadence_weekday)} ·{" "}
+              {formatDay(view.start_date)}
               {view.end_date ? ` – ${formatDay(view.end_date)}` : ""}
             </span>
           </p>
@@ -184,37 +195,57 @@ export default async function InvitePage({
         <section className="mt-6">
           <div
             className={
-              loggedToday
-                ? "ring-success/25 bg-success/10 flex items-center gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
-                : "ring-foreground/10 bg-muted/40 flex items-center gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
+              ev.status === "failed"
+                ? "ring-destructive/25 bg-destructive/[0.07] flex items-center gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
+                : loggedToday || !ev.dueNow
+                  ? "ring-success/25 bg-success/10 flex items-center gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
+                  : "ring-foreground/10 bg-muted/40 flex items-center gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
             }
           >
             <span
               className={
-                loggedToday
-                  ? "bg-success size-2.5 shrink-0 rounded-full"
-                  : "bg-muted-foreground/40 size-2.5 shrink-0 rounded-full"
+                ev.status === "failed"
+                  ? "bg-destructive size-2.5 shrink-0 rounded-full"
+                  : loggedToday || !ev.dueNow
+                    ? "bg-success size-2.5 shrink-0 rounded-full"
+                    : "bg-muted-foreground/40 size-2.5 shrink-0 rounded-full"
               }
               aria-hidden
             />
             <span className="font-medium text-pretty">
-              {loggedToday
-                ? `${owner} checked in today. 🔥`
-                : `${owner} hasn't logged today yet.`}
+              {ev.status === "failed"
+                ? `${owner} blew it.${view.stake_text ? " Time to collect." : ""}`
+                : ev.status === "won"
+                  ? `${owner} finished the whole run. 🏆`
+                  : ev.status === "upcoming"
+                    ? `Starts ${formatDay(view.start_date, { weekday: true })}.`
+                    : loggedToday
+                      ? `${owner} checked in today. 🔥`
+                      : !ev.dueNow
+                        ? `${owner} is square for this ${noun.one}.`
+                        : `${owner} hasn't logged today yet.`}
             </span>
           </div>
         </section>
 
         {/* Stats */}
-        <section aria-label="Progress" className="mt-4 grid grid-cols-2 gap-3">
+        <section
+          aria-label="Progress"
+          className={`mt-4 grid gap-3 ${
+            ev.skipsLeft !== null ? "grid-cols-3" : "grid-cols-2"
+          }`}
+        >
           <Card size="sm">
             <CardContent className="flex flex-col gap-0.5">
               <span className="text-primary flex items-center gap-1">
                 <Flame className="size-4" aria-hidden />
-                <span className="text-2xl font-bold tabular-nums">{streak}</span>
+                <span className="text-2xl font-bold tabular-nums">
+                  {ev.streak}
+                </span>
               </span>
               <p className="text-muted-foreground text-xs">
-                day streak{best > 0 ? ` · best ${best}` : ""}
+                {noun.one} streak
+                {ev.bestStreak > 0 ? ` · best ${ev.bestStreak}` : ""}
               </p>
             </CardContent>
           </Card>
@@ -223,37 +254,82 @@ export default async function InvitePage({
               <span className="flex items-center gap-1">
                 <Trophy className="text-primary size-4" aria-hidden />
                 <span className="text-2xl font-bold tabular-nums">
-                  {progress.completedDays}
+                  {ev.mode === "total"
+                    ? ev.totalLogged.toLocaleString("en-US")
+                    : ev.donePeriods}
                 </span>
-                {progress.totalDays && (
+                {ev.mode === "total" ? (
                   <span className="text-muted-foreground text-sm">
-                    /{progress.totalDays}
+                    /{(ev.totalTarget ?? 0).toLocaleString("en-US")}
                   </span>
+                ) : (
+                  ev.totalPeriods && (
+                    <span className="text-muted-foreground text-sm">
+                      /{ev.totalPeriods}
+                    </span>
+                  )
                 )}
               </span>
               <p className="text-muted-foreground text-xs">
-                days done
-                {progress.daysRemaining !== null
-                  ? ` · ${progress.daysRemaining} left`
+                {ev.mode === "total" ? view.target_unit || "total" : "done"}
+                {ev.daysRemaining !== null
+                  ? ` · ${ev.daysRemaining} days left`
                   : ""}
               </p>
             </CardContent>
           </Card>
+          {ev.skipsLeft !== null && (
+            <Card size="sm">
+              <CardContent className="flex flex-col gap-0.5">
+                <span className="flex items-center gap-1">
+                  <LifeBuoy
+                    className={
+                      ev.skipsLeft === 0
+                        ? "text-warning size-4"
+                        : "text-primary size-4"
+                    }
+                    aria-hidden
+                  />
+                  <span className="text-2xl font-bold tabular-nums">
+                    {ev.skipsLeft}
+                  </span>
+                </span>
+                <p className="text-muted-foreground text-xs">
+                  skips left{ev.skipsAllowed ? ` of ${ev.skipsAllowed}` : ""}
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </section>
 
-        {progress.percent !== null && (
+        {(ev.skipsAllowed !== null || ev.maxMissesInRow !== null) && (
+          <p className="text-muted-foreground mt-2.5 text-xs text-pretty">
+            The deal:{" "}
+            {describeAllowance({
+              skipsAllowed: ev.skipsAllowed,
+              maxMissesInRow: ev.maxMissesInRow,
+              cadence: view.cadence,
+            }).toLowerCase()}
+          </p>
+        )}
+
+        {ev.percent !== null && (
           <section className="mt-3">
             <div
               className="bg-muted h-2.5 w-full overflow-hidden rounded-full"
               role="progressbar"
-              aria-valuenow={progress.percent}
+              aria-valuenow={ev.percent}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-label="Challenge completion"
             >
               <div
-                className="bg-primary h-full rounded-full transition-all"
-                style={{ width: `${progress.percent}%` }}
+                className={`h-full rounded-full transition-all ${
+                  ev.status === "failed"
+                    ? "bg-muted-foreground/40"
+                    : "bg-primary"
+                }`}
+                style={{ width: `${ev.percent}%` }}
               />
             </div>
           </section>
@@ -331,22 +407,25 @@ export default async function InvitePage({
                     {formatDay(r.date)}
                   </span>
                   <div className="flex min-w-0 flex-col">
-                    {view.daily_target > 1 && (
+                    {ev.mode === "each" ? (
                       <span className="text-sm font-medium tabular-nums">
                         {r.value}{" "}
                         <span className="text-muted-foreground font-normal">
                           / {view.daily_target}
+                          {view.target_unit ? ` ${view.target_unit}` : ""}
                         </span>
                       </span>
-                    )}
+                    ) : ev.mode === "total" ? (
+                      <span className="text-sm font-medium tabular-nums">
+                        +{formatCount(r.value, view.target_unit)}
+                      </span>
+                    ) : null}
                     {r.note ? (
                       <span className="text-muted-foreground text-sm text-pretty">
                         {r.note}
                       </span>
                     ) : (
-                      view.daily_target <= 1 && (
-                        <span className="text-sm">Done ✓</span>
-                      )
+                      ev.mode === "tick" && <span className="text-sm">Done ✓</span>
                     )}
                   </div>
                 </li>

@@ -7,15 +7,22 @@ import {
   CheckCircle2,
   Flame,
   HandCoins,
+  HeartCrack,
+  LifeBuoy,
+  PartyPopper,
   Trophy,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   cadenceLabel,
-  challengeProgress,
-  currentStreak,
-  longestStreak,
+  describeAllowance,
+  evaluateChallenge,
+  formatCount,
+  formatDay,
+  periodNoun,
+  schedulePeriods,
   todayISO,
+  type Period,
 } from "@/lib/challenges";
 import { AppHeader } from "@/components/app-header";
 import { CheckInForm } from "@/components/check-in-form";
@@ -23,14 +30,6 @@ import { ShareInvite } from "@/components/share-invite";
 import { ReactionsFeed, type ReactionItem } from "@/components/reactions-feed";
 
 export const metadata: Metadata = { title: "Challenge" };
-
-function formatDay(date: string): string {
-  return new Date(`${date}T00:00:00.000Z`).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
 
 export default async function ChallengeDetailPage({
   params,
@@ -48,7 +47,7 @@ export default async function ChallengeDetailPage({
   const { data: challenge } = await supabase
     .from("challenges")
     .select(
-      "id, owner_id, title, cadence, daily_target, start_date, end_date, stake_text",
+      "id, owner_id, title, cadence, cadence_weekday, daily_target, total_target, target_unit, start_date, end_date, allowance_mode, allowance_value, max_misses_in_row, stake_text",
     )
     .eq("id", id)
     .maybeSingle();
@@ -87,14 +86,20 @@ export default async function ChallengeDetailPage({
   const dates = rows.map((r) => r.date);
   const today = todayISO();
 
-  const streak = currentStreak(dates, today);
-  const best = longestStreak(dates);
-  const progress = challengeProgress({
+  const rules = {
+    cadence: challenge.cadence,
+    cadenceWeekday: challenge.cadence_weekday,
     startDate: challenge.start_date,
     endDate: challenge.end_date,
-    completedDays: new Set(dates).size,
-    today,
-  });
+    allowanceMode: challenge.allowance_mode,
+    allowanceValue: challenge.allowance_value,
+    maxMissesInRow: challenge.max_misses_in_row,
+    dailyTarget: challenge.daily_target,
+    totalTarget: challenge.total_target,
+  };
+  const ev = evaluateChallenge(rules, rows, today);
+  const noun = periodNoun(challenge.cadence);
+  const periods = schedulePeriods({ ...rules, today });
   const todayRow = rows.find((r) => r.date === today) ?? null;
   const doneSet = new Set(dates);
 
@@ -118,7 +123,7 @@ export default async function ChallengeDetailPage({
           <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
             <CalendarDays className="size-3.5" aria-hidden />
             <span>
-              {cadenceLabel(challenge.cadence)} ·{" "}
+              {cadenceLabel(challenge.cadence, challenge.cadence_weekday)} ·{" "}
               {formatDay(challenge.start_date)}
               {challenge.end_date ? ` – ${formatDay(challenge.end_date)}` : ""}
             </span>
@@ -127,6 +132,50 @@ export default async function ChallengeDetailPage({
             {challenge.title}
           </h1>
         </div>
+
+        {/* The verdict, once there is one. */}
+        {ev.status === "failed" && (
+          <div className="text-destructive ring-destructive/25 bg-destructive/[0.06] mt-5 flex items-start gap-2.5 rounded-xl px-4 py-3">
+            <HeartCrack className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <p className="text-sm text-pretty">
+              <span className="font-semibold">Challenge failed. </span>
+              {ev.failReason === "in-a-row"
+                ? `You missed ${ev.worstMissRun} ${
+                    ev.worstMissRun === 1 ? noun.one : noun.many
+                  } back to back.`
+                : ev.failReason === "total"
+                  ? `Time ran out ${formatCount(
+                      ev.totalRemaining ?? 0,
+                      challenge.target_unit,
+                    )} short of ${formatCount(ev.totalTarget ?? 0)}.`
+                  : `You used ${ev.missedPeriods} skips and only had ${ev.skipsAllowed}.`}{" "}
+              {challenge.stake_text
+                ? "Time to pay up — then start a fresh one."
+                : "Start a fresh one; the streak was real while it lasted."}
+            </p>
+          </div>
+        )}
+        {ev.status === "won" && (
+          <div className="text-success ring-success/25 bg-success/[0.06] mt-5 flex items-start gap-2.5 rounded-xl px-4 py-3">
+            <PartyPopper className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <p className="text-sm text-pretty">
+              <span className="font-semibold">You made it. </span>
+              {ev.mode === "total"
+                ? `${formatCount(ev.totalLogged, challenge.target_unit)} logged — you cleared ${formatCount(ev.totalTarget ?? 0)}.`
+                : `${ev.donePeriods} of ${ev.totalPeriods} check-ins, inside the rules you set.`}{" "}
+              That&apos;s the whole game.
+            </p>
+          </div>
+        )}
+        {ev.status === "upcoming" && (
+          <div className="text-muted-foreground ring-foreground/10 mt-5 flex items-start gap-2.5 rounded-xl px-4 py-3 ring-1">
+            <CalendarDays className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <p className="text-sm text-pretty">
+              Kicks off {formatDay(challenge.start_date, { weekday: true })}.
+              Send your buddy the link in the meantime.
+            </p>
+          </div>
+        )}
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
           {/* ---------------- Main column ---------------- */}
@@ -141,14 +190,15 @@ export default async function ChallengeDetailPage({
                   <div className="flex flex-col">
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-primary text-4xl leading-none font-bold tabular-nums">
-                        {streak}
+                        {ev.streak}
                       </span>
                       <span className="text-muted-foreground text-sm">
-                        day{streak === 1 ? "" : "s"}
+                        {ev.streak === 1 ? noun.one : noun.many}
                       </span>
                     </div>
                     <p className="text-muted-foreground mt-1 text-xs">
-                      current streak{best > 0 ? ` · best ${best}` : ""}
+                      current streak
+                      {ev.bestStreak > 0 ? ` · best ${ev.bestStreak}` : ""}
                     </p>
                   </div>
                   {todayRow && (
@@ -160,51 +210,78 @@ export default async function ChallengeDetailPage({
                 </div>
               </div>
 
-              {progress.percent !== null && (
+              {ev.percent !== null && (
                 <div className="ring-foreground/10 flex flex-col gap-2.5 rounded-2xl px-5 py-4 ring-1">
                   <div className="flex items-center justify-between gap-3">
                     <span className="flex items-center gap-1.5">
                       <Trophy className="text-primary size-4" aria-hidden />
                       <span className="text-sm font-semibold tabular-nums">
-                        {progress.percent}% complete
+                        {ev.mode === "total"
+                          ? `${formatCount(ev.totalLogged, challenge.target_unit)} of ${formatCount(ev.totalTarget ?? 0)}`
+                          : `${ev.percent}% complete`}
                       </span>
                     </span>
                     <span className="text-muted-foreground text-xs tabular-nums">
-                      {progress.completedDays}/{progress.totalDays} days
-                      {progress.daysRemaining !== null
-                        ? ` · ${progress.daysRemaining} left`
+                      {ev.mode === "total"
+                        ? `${ev.percent}%`
+                        : `${ev.donePeriods}/${ev.totalPeriods} check-ins`}
+                      {ev.daysRemaining !== null
+                        ? ` · ${ev.daysRemaining} days left`
                         : ""}
                     </span>
                   </div>
                   <div
                     className="bg-muted h-2.5 w-full overflow-hidden rounded-full"
                     role="progressbar"
-                    aria-valuenow={progress.percent}
+                    aria-valuenow={ev.percent}
                     aria-valuemin={0}
                     aria-valuemax={100}
                     aria-label="Challenge completion"
                   >
                     <div
                       className="bg-primary h-full rounded-full transition-all"
-                      style={{ width: `${progress.percent}%` }}
+                      style={{ width: `${ev.percent}%` }}
                     />
                   </div>
+                  {/* Pace is the number that matters on a compounding goal —
+                      a skipped day is fine as long as the total keeps up. */}
+                  {ev.pace !== null && ev.status === "active" && (
+                    <p className="text-xs">
+                      {ev.pace >= 0 ? (
+                        <span className="text-success font-medium">
+                          {formatCount(ev.pace, challenge.target_unit)} ahead of
+                          pace
+                        </span>
+                      ) : (
+                        <span className="text-warning font-medium">
+                          {formatCount(-ev.pace, challenge.target_unit)} behind
+                          pace
+                        </span>
+                      )}
+                      {ev.perCheckInToFinish !== null && (
+                        <span className="text-muted-foreground">
+                          {" "}
+                          ·{" "}
+                          {formatCount(
+                            ev.perCheckInToFinish,
+                            challenge.target_unit,
+                          )}{" "}
+                          per check-in to finish
+                        </span>
+                      )}
+                    </p>
+                  )}
                 </div>
               )}
 
-              {/* Don't-break-the-chain grid over the challenge window */}
-              {progress.totalDays !== null && (
-                <ChainGrid
-                  startDate={challenge.start_date}
-                  totalDays={progress.totalDays}
-                  done={doneSet}
-                  today={today}
-                />
+              {/* Don't-break-the-chain grid over every scheduled check-in */}
+              {periods.length > 0 && (
+                <ChainGrid periods={periods} done={doneSet} today={today} />
               )}
             </section>
 
             {/* Today's check-in (owner only) */}
-            {isOwner ? (
+            {isOwner && ev.status === "active" ? (
               <section className="flex flex-col gap-3">
                 <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
                   {todayRow ? "Today — logged ✓" : "Log today"}
@@ -213,16 +290,19 @@ export default async function ChallengeDetailPage({
                   <CheckInForm
                     challengeId={challenge.id}
                     dailyTarget={challenge.daily_target}
+                    totalTarget={challenge.total_target}
+                    targetUnit={challenge.target_unit}
+                    suggested={ev.perCheckInToFinish}
                     today={
                       todayRow
                         ? { value: todayRow.value, note: todayRow.note }
                         : null
                     }
-                    streak={streak}
+                    streak={ev.streak}
                   />
                 </div>
               </section>
-            ) : (
+            ) : isOwner ? null : (
               <section>
                 <p className="text-muted-foreground text-sm text-pretty">
                   You&apos;re a buddy on this challenge. Open it from{" "}
@@ -250,20 +330,27 @@ export default async function ChallengeDetailPage({
                         {formatDay(r.date)}
                       </span>
                       <div className="flex min-w-0 flex-col">
-                        {challenge.daily_target > 1 && (
+                        {ev.mode === "each" ? (
                           <span className="text-sm font-medium tabular-nums">
                             {r.value}{" "}
                             <span className="text-muted-foreground font-normal">
                               / {challenge.daily_target}
+                              {challenge.target_unit
+                                ? ` ${challenge.target_unit}`
+                                : ""}
                             </span>
                           </span>
-                        )}
+                        ) : ev.mode === "total" ? (
+                          <span className="text-sm font-medium tabular-nums">
+                            +{formatCount(r.value, challenge.target_unit)}
+                          </span>
+                        ) : null}
                         {r.note ? (
                           <span className="text-muted-foreground text-sm text-pretty">
                             {r.note}
                           </span>
                         ) : (
-                          challenge.daily_target <= 1 && (
+                          ev.mode === "tick" && (
                             <span className="text-sm">Done ✓</span>
                           )
                         )}
@@ -277,6 +364,37 @@ export default async function ChallengeDetailPage({
 
           {/* ---------------- Sidebar ---------------- */}
           <aside className="flex flex-col gap-6">
+            {/* Wiggle room, as a running balance — the number that actually
+                changes how today feels. */}
+            {(ev.skipsAllowed !== null || ev.maxMissesInRow !== null) && (
+              <div className="ring-foreground/10 flex flex-col gap-2 rounded-xl px-4 py-3 ring-1">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex items-center gap-1.5 text-sm font-medium">
+                    <LifeBuoy className="text-muted-foreground size-4" aria-hidden />
+                    Wiggle room
+                  </span>
+                  {ev.skipsLeft !== null && (
+                    <span
+                      className={`text-sm font-semibold tabular-nums ${
+                        ev.skipsLeft === 0 ? "text-warning" : "text-foreground"
+                      }`}
+                    >
+                      {ev.skipsLeft} left
+                    </span>
+                  )}
+                </div>
+                <p className="text-muted-foreground text-xs text-pretty">
+                  {describeAllowance({
+                    skipsAllowed: ev.skipsAllowed,
+                    maxMissesInRow: ev.maxMissesInRow,
+                    cadence: challenge.cadence,
+                  })}{" "}
+                  {ev.missedPeriods > 0 &&
+                    `Missed ${ev.missedPeriods} so far.`}
+                </p>
+              </div>
+            )}
+
             {challenge.stake_text && (
               <div className="bg-accent/60 text-accent-foreground flex items-start gap-2.5 rounded-xl px-4 py-3">
                 <HandCoins className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -311,45 +429,46 @@ export default async function ChallengeDetailPage({
 }
 
 /**
- * One cell per planned day: filled for a logged day, outlined for today, faint
- * for everything else. Decorative — the same numbers are stated above in text.
+ * One cell per scheduled check-in: filled when logged, red once a slot has
+ * elapsed unfilled, outlined for the one that's live right now, faint for
+ * what's still ahead. Decorative — the same numbers are stated above in text.
  */
 function ChainGrid({
-  startDate,
-  totalDays,
+  periods,
   done,
   today,
 }: {
-  startDate: string;
-  totalDays: number;
+  periods: Period[];
   done: Set<string>;
   today: string;
 }) {
-  const start = new Date(`${startDate}T00:00:00.000Z`);
-  const cells = Array.from({ length: Math.min(totalDays, 120) }, (_, i) => {
-    const d = new Date(start);
-    d.setUTCDate(d.getUTCDate() + i);
-    return d.toISOString().slice(0, 10);
-  });
-
   return (
     <div
       className="ring-foreground/10 grid grid-cols-10 gap-1.5 rounded-2xl px-5 py-4 ring-1 sm:grid-cols-15"
       aria-hidden
     >
-      {cells.map((date) => (
-        <span
-          key={date}
-          title={date}
-          className={
-            done.has(date)
-              ? "bg-primary aspect-square rounded-[4px]"
-              : date === today
-                ? "ring-primary/60 aspect-square rounded-[4px] ring-2"
-                : "bg-muted-foreground/15 aspect-square rounded-[4px]"
-          }
-        />
-      ))}
+      {periods.slice(0, 120).map((p) => {
+        const filled = [...done].some(
+          (d) => d >= p.start && d <= p.end,
+        );
+        const isPast = p.end < today;
+        const isNow = p.start <= today && today <= p.end;
+        return (
+          <span
+            key={p.start}
+            title={p.start === p.end ? p.start : `${p.start} – ${p.end}`}
+            className={
+              filled
+                ? "bg-primary aspect-square rounded-[4px]"
+                : isPast
+                  ? "bg-destructive/35 aspect-square rounded-[4px]"
+                  : isNow
+                    ? "ring-primary/60 aspect-square rounded-[4px] ring-2"
+                    : "bg-muted-foreground/15 aspect-square rounded-[4px]"
+            }
+          />
+        );
+      })}
     </div>
   );
 }

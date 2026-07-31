@@ -35,11 +35,19 @@ function SubmitButton({ doneToday }: { doneToday: boolean }) {
 export function CheckInForm({
   challengeId,
   dailyTarget,
+  totalTarget,
+  targetUnit,
+  suggested,
   today,
   streak,
 }: {
   challengeId: string;
   dailyTarget: number;
+  /** Set when the challenge is scored on a cumulative total. */
+  totalTarget?: number | null;
+  targetUnit?: string | null;
+  /** Even-pace amount for this check-in, on a total challenge. */
+  suggested?: number | null;
   today: TodayCheckIn | null;
   /** Streak as of this render — used to size the milestone confetti burst. */
   streak: number;
@@ -49,7 +57,8 @@ export function CheckInForm({
     {},
   );
   const doneToday = today !== null;
-  const tracksNumber = dailyTarget > 1;
+  const isTotal = !!totalTarget;
+  const tracksNumber = dailyTarget > 1 || isTotal;
 
   // Fire the celebration whenever a check-in succeeds. `state` is a fresh object
   // per action, so this runs once per successful log (never on mount, since the
@@ -70,18 +79,29 @@ export function CheckInForm({
           <Label htmlFor="value">
             How much today?{" "}
             <span className="text-muted-foreground font-normal">
-              (target {dailyTarget})
+              {isTotal
+                ? suggested
+                  ? `(${suggested}${targetUnit ? ` ${targetUnit}` : ""} keeps you on pace)`
+                  : "(counts toward your total)"
+                : `(target ${dailyTarget}${targetUnit ? ` ${targetUnit}` : ""})`}
             </span>
           </Label>
-          <Input
-            id="value"
-            name="value"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={100000}
-            defaultValue={today?.value ?? dailyTarget}
-          />
+          <div className="flex items-center gap-2">
+            <Input
+              id="value"
+              name="value"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={100000}
+              defaultValue={today?.value ?? (isTotal ? (suggested ?? 1) : dailyTarget)}
+            />
+            {targetUnit && (
+              <span className="text-muted-foreground shrink-0 text-sm">
+                {targetUnit}
+              </span>
+            )}
+          </div>
         </div>
       ) : (
         <input type="hidden" name="value" value={1} />

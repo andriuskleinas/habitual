@@ -13,9 +13,8 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import {
   cadenceLabel,
-  challengeProgress,
-  currentStreak,
-  longestStreak,
+  evaluateChallenge,
+  formatCount,
   todayISO,
 } from "@/lib/challenges";
 import { AppHeader } from "@/components/app-header";
@@ -45,7 +44,7 @@ export default async function DashboardPage() {
   const { data: challenges } = await supabase
     .from("challenges")
     .select(
-      "id, title, cadence, daily_target, start_date, end_date, stake_text, check_ins(date)",
+      "id, title, cadence, cadence_weekday, daily_target, total_target, target_unit, start_date, end_date, allowance_mode, allowance_value, max_misses_in_row, stake_text, check_ins(date, value)",
     )
     .eq("owner_id", user.id)
     .order("created_at", { ascending: false });
@@ -56,7 +55,7 @@ export default async function DashboardPage() {
   const { data: buddyRows } = await supabase
     .from("buddies")
     .select(
-      "invite_token, challenge:challenges(id, title, cadence, start_date, end_date, check_ins(date))",
+      "invite_token, challenge:challenges(id, title, cadence, cadence_weekday, daily_target, total_target, start_date, end_date, allowance_mode, allowance_value, max_misses_in_row, check_ins(date, value))",
     )
     .eq("buddy_user_id", user.id)
     .eq("status", "claimed")
@@ -70,17 +69,39 @@ export default async function DashboardPage() {
     return c ? [{ token: b.invite_token, challenge: c }] : [];
   });
 
-  // Roll-up stats across every owned challenge, so the dashboard answers
-  // "how am I doing?" before you open anything.
-  const allDates = list.flatMap((c) => (c.check_ins ?? []).map((ci) => ci.date));
-  const bestStreak = list.reduce(
-    (max, c) => Math.max(max, longestStreak((c.check_ins ?? []).map((ci) => ci.date))),
-    0,
-  );
-  const loggedToday = list.filter((c) =>
-    (c.check_ins ?? []).some((ci) => ci.date === today),
+  // Score every owned challenge against its own cadence and skip rules once,
+  // then reuse it for both the roll-up stats and the cards below.
+  const owned = list.map((c) => {
+    const checkIns = c.check_ins ?? [];
+    return {
+      c,
+      dates: checkIns.map((ci) => ci.date),
+      ev: evaluateChallenge(
+        {
+          cadence: c.cadence,
+          cadenceWeekday: c.cadence_weekday,
+          startDate: c.start_date,
+          endDate: c.end_date,
+          allowanceMode: c.allowance_mode,
+          allowanceValue: c.allowance_value,
+          maxMissesInRow: c.max_misses_in_row,
+          dailyTarget: c.daily_target,
+          totalTarget: c.total_target,
+        },
+        checkIns,
+        today,
+      ),
+    };
+  });
+
+  const bestStreak = owned.reduce((max, o) => Math.max(max, o.ev.bestStreak), 0);
+  const loggedToday = owned.filter((o) => o.dates.includes(today)).length;
+  const totalCheckIns = owned.reduce((n, o) => n + o.dates.length, 0);
+  // "Waiting on you" beats "waiting on today" now that a challenge might only
+  // want one check-in this whole week.
+  const waiting = owned.filter(
+    (o) => o.ev.status === "active" && o.ev.dueNow,
   ).length;
-  const totalCheckIns = allDates.length;
 
   return (
     <>
@@ -94,11 +115,9 @@ export default async function DashboardPage() {
           <p className="text-muted-foreground text-pretty">
             {list.length === 0
               ? "Your challenges will live here."
-              : loggedToday === list.length
-                ? "Everything logged for today. Nice work."
-                : `${list.length - loggedToday} challenge${
-                    list.length - loggedToday === 1 ? "" : "s"
-                  } still waiting on today's check-in.`}
+              : waiting === 0
+                ? "Nothing owing right now. Nice work."
+                : `${waiting} challenge${waiting === 1 ? "" : "s"} waiting on you.`}
           </p>
         </section>
 
@@ -183,15 +202,8 @@ export default async function DashboardPage() {
             </Card>
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2">
-              {list.map((c) => {
-                const dates = (c.check_ins ?? []).map((ci) => ci.date);
-                const streak = currentStreak(dates, today);
-                const progress = challengeProgress({
-                  startDate: c.start_date,
-                  endDate: c.end_date,
-                  completedDays: new Set(dates).size,
-                  today,
-                });
+              {owned.map(({ c, dates, ev }) => {
+                const streak = ev.streak;
                 const doneToday = dates.includes(today);
 
                 return (
@@ -206,10 +218,14 @@ export default async function DashboardPage() {
                             <div className="flex min-w-0 flex-col gap-0.5">
                               <p className="leading-snug font-medium">{c.title}</p>
                               <p className="text-muted-foreground text-xs">
-                                {cadenceLabel(c.cadence)}
-                                {progress.totalDays
-                                  ? ` · ${progress.daysRemaining} days left`
-                                  : ""}
+                                {cadenceLabel(c.cadence, c.cadence_weekday)}
+                                {ev.status === "failed"
+                                  ? " · failed"
+                                  : ev.status === "won"
+                                    ? " · done ✓"
+                                    : ev.daysRemaining !== null
+                                      ? ` · ${ev.daysRemaining} days left`
+                                      : ""}
                               </p>
                             </div>
                             <span className="bg-primary/10 text-primary flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5">
@@ -221,29 +237,39 @@ export default async function DashboardPage() {
                             </span>
                           </div>
 
-                          {progress.percent !== null && (
+                          {ev.percent !== null && (
                             <div className="mt-auto flex flex-col gap-1.5">
                               <div
                                 className="bg-muted h-2 w-full overflow-hidden rounded-full"
                                 role="progressbar"
-                                aria-valuenow={progress.percent}
+                                aria-valuenow={ev.percent}
                                 aria-valuemin={0}
                                 aria-valuemax={100}
                                 aria-label={`${c.title} progress`}
                               >
                                 <div
-                                  className="bg-primary h-full rounded-full transition-all"
-                                  style={{ width: `${progress.percent}%` }}
+                                  className={`h-full rounded-full transition-all ${
+                                    ev.status === "failed"
+                                      ? "bg-muted-foreground/40"
+                                      : "bg-primary"
+                                  }`}
+                                  style={{ width: `${ev.percent}%` }}
                                 />
                               </div>
-                              <div className="text-muted-foreground flex items-center justify-between text-xs">
+                              <div className="text-muted-foreground flex items-center justify-between gap-2 text-xs">
                                 <span className="tabular-nums">
-                                  {progress.completedDays}/{progress.totalDays} days
+                                  {ev.mode === "total"
+                                    ? `${formatCount(ev.totalLogged, c.target_unit)} of ${formatCount(ev.totalTarget ?? 0)}`
+                                    : `${ev.donePeriods}/${ev.totalPeriods} check-ins`}
                                 </span>
-                                {doneToday ? (
+                                {ev.status !== "active" ? null : doneToday ? (
                                   <span className="text-success inline-flex items-center gap-1 font-medium">
                                     <CheckCircle2 className="size-3.5" aria-hidden />
                                     Logged today
+                                  </span>
+                                ) : ev.skipsLeft === 0 ? (
+                                  <span className="text-warning font-medium">
+                                    No skips left →
                                   </span>
                                 ) : (
                                   <span className="text-primary font-medium">
@@ -270,16 +296,25 @@ export default async function DashboardPage() {
             </h2>
             <ul className="grid gap-4 sm:grid-cols-2">
               {buddyList.map(({ token, challenge: c }) => {
-                const dates = (c.check_ins ?? []).map(
-                  (ci: { date: string }) => ci.date,
-                );
-                const streak = currentStreak(dates, today);
-                const progress = challengeProgress({
-                  startDate: c.start_date,
-                  endDate: c.end_date,
-                  completedDays: new Set(dates).size,
+                const checkIns: { date: string; value: number }[] =
+                  c.check_ins ?? [];
+                const dates = checkIns.map((ci) => ci.date);
+                const ev = evaluateChallenge(
+                  {
+                    cadence: c.cadence,
+                    cadenceWeekday: c.cadence_weekday,
+                    startDate: c.start_date,
+                    endDate: c.end_date,
+                    allowanceMode: c.allowance_mode,
+                    allowanceValue: c.allowance_value,
+                    maxMissesInRow: c.max_misses_in_row,
+                    dailyTarget: c.daily_target,
+                    totalTarget: c.total_target,
+                  },
+                  checkIns,
                   today,
-                });
+                );
+                const streak = ev.streak;
                 const doneToday = dates.includes(today);
 
                 return (
@@ -304,18 +339,18 @@ export default async function DashboardPage() {
                             </span>
                           </div>
 
-                          {progress.percent !== null && (
+                          {ev.percent !== null && (
                             <div
                               className="bg-muted mt-auto h-2 w-full overflow-hidden rounded-full"
                               role="progressbar"
-                              aria-valuenow={progress.percent}
+                              aria-valuenow={ev.percent}
                               aria-valuemin={0}
                               aria-valuemax={100}
                               aria-label={`${c.title} progress`}
                             >
                               <div
                                 className="bg-primary h-full rounded-full transition-all"
-                                style={{ width: `${progress.percent}%` }}
+                                style={{ width: `${ev.percent}%` }}
                               />
                             </div>
                           )}

@@ -58,40 +58,58 @@ export type Database = {
       }
       challenges: {
         Row: {
+          allowance_mode: string | null
+          allowance_value: number | null
           cadence: string
+          cadence_weekday: number | null
           created_at: string
           daily_target: number
           end_date: string | null
           id: string
           is_public: boolean
+          max_misses_in_row: number | null
           owner_id: string
           stake_text: string | null
           start_date: string
+          target_unit: string | null
           title: string
+          total_target: number | null
         }
         Insert: {
+          allowance_mode?: string | null
+          allowance_value?: number | null
           cadence?: string
+          cadence_weekday?: number | null
           created_at?: string
           daily_target?: number
           end_date?: string | null
           id?: string
           is_public?: boolean
+          max_misses_in_row?: number | null
           owner_id: string
           stake_text?: string | null
           start_date?: string
+          target_unit?: string | null
           title: string
+          total_target?: number | null
         }
         Update: {
+          allowance_mode?: string | null
+          allowance_value?: number | null
           cadence?: string
+          cadence_weekday?: number | null
           created_at?: string
           daily_target?: number
           end_date?: string | null
           id?: string
           is_public?: boolean
+          max_misses_in_row?: number | null
           owner_id?: string
           stake_text?: string | null
           start_date?: string
+          target_unit?: string | null
           title?: string
+          total_target?: number | null
         }
         Relationships: [
           {
