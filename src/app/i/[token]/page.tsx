@@ -23,50 +23,93 @@ import {
   periodNoun,
   schedulePeriods,
   todayISO,
-  type AllowanceMode,
 } from "@/lib/challenges";
+import { fetchInviteCard, UUID_RE, type InviteView } from "@/lib/invite";
 import { Wordmark } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BuddyReactions, CheerPrompt } from "@/components/buddy-reactions";
 import { parsePendingReaction } from "@/lib/reactions";
 import { ChainGrid } from "@/components/chain-grid";
-import { ReactionsFeed, type ReactionItem } from "@/components/reactions-feed";
+import { ReactionsFeed } from "@/components/reactions-feed";
 import { StickyCheerBar } from "@/components/sticky-cheer-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export const metadata: Metadata = {
-  title: "Watching a challenge",
-  // Invite links get pasted into chats; the page itself shouldn't be indexed.
-  robots: { index: false, follow: false },
-};
+/**
+ * Chat-preview text to sit beside the generated OG image.
+ *
+ * Named, specific, and current: "Andrius is on day 12 of 30" is a reason to
+ * tap; "Watching a challenge" is not. Still `noindex` — an invite link is a
+ * capability URL that happens to get pasted into chats, not a public page.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}): Promise<Metadata> {
+  const { token } = await params;
+  const view = await fetchInviteCard(token);
 
-/** Shape returned by the `challenge_by_invite` RPC (jsonb). */
-type InviteView = {
-  id: string;
-  title: string;
-  cadence: string;
-  cadence_weekday: number | null;
-  daily_target: number;
-  total_target: number | null;
-  target_unit: string | null;
-  start_date: string;
-  end_date: string | null;
-  allowance_mode: AllowanceMode | null;
-  allowance_value: number | null;
-  max_misses_in_row: number | null;
-  stake_text: string | null;
-  owner_name: string | null;
-  invite_status: string;
-  buddy_claimed: boolean;
-  viewer_is_owner: boolean | null;
-  viewer_is_buddy: boolean | null;
-  check_ins: { date: string; value: number; note: string | null }[];
-  reactions: ReactionItem[];
-};
+  if (!view) {
+    return {
+      title: "Watching a challenge",
+      robots: { index: false, follow: false },
+    };
+  }
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const owner = view.owner_name ?? "Someone";
+  const ev = evaluateChallenge(
+    {
+      cadence: view.cadence,
+      cadenceWeekday: view.cadence_weekday,
+      startDate: view.start_date,
+      endDate: view.end_date,
+      allowanceMode: view.allowance_mode,
+      allowanceValue: view.allowance_value,
+      maxMissesInRow: view.max_misses_in_row,
+      dailyTarget: view.daily_target,
+      totalTarget: view.total_target,
+    },
+    view.check_ins ?? [],
+    todayISO(),
+  );
+  const noun = periodNoun(view.cadence);
+
+  const ogTitle = `${owner} is doing "${view.title}" in public`;
+  const description = [
+    // A brand-new challenge has no numbers worth quoting; say what it is
+    // instead of leading a share preview with a zero.
+    ev.status === "upcoming"
+      ? `Starts ${formatDay(view.start_date, { weekday: true })}`
+      : ev.streak > 0
+        ? `${ev.streak} ${ev.streak === 1 ? noun.one : noun.many} in a row so far`
+        : ev.donePeriods > 0
+          ? `${ev.donePeriods} check-ins so far`
+          : `${cadenceLabel(view.cadence, view.cadence_weekday)} — day one`,
+    view.stake_text ? `On the line: ${view.stake_text}` : null,
+    "Watch their streak live and cheer them on.",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return {
+    title: view.title,
+    description,
+    robots: { index: false, follow: false },
+    openGraph: {
+      type: "website",
+      siteName: "Habitual",
+      title: ogTitle,
+      description,
+      // The image comes from the sibling `opengraph-image` file.
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: ogTitle,
+      description,
+    },
+  };
+}
 
 export default async function InvitePage({
   params,
