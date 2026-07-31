@@ -23,6 +23,7 @@ export function LoginForm({
   next,
   hadLinkError = false,
   fromInvite = false,
+  pendingEmoji = null,
 }: {
   /** Already sanitised by `safeNext` on the server. */
   next: string;
@@ -30,6 +31,8 @@ export function LoginForm({
   hadLinkError?: boolean;
   /** Arrived from a buddy invite — almost certainly a first-time visitor. */
   fromInvite?: boolean;
+  /** Emoji of the reaction they picked before signing in, if any. */
+  pendingEmoji?: string | null;
 }) {
   const router = useRouter();
 
@@ -127,15 +130,32 @@ export function LoginForm({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1.5 text-center">
+      <div className="flex flex-col items-center gap-1.5 text-center">
+        {/* Their reaction, held. Seeing the thing they already picked waiting
+            on the sign-in screen is what makes this feel like one step left
+            rather than a toll gate. */}
+        {pendingEmoji && (
+          <span
+            className="bg-primary/10 mb-1 flex size-14 items-center justify-center rounded-2xl text-3xl"
+            aria-hidden
+          >
+            {pendingEmoji}
+          </span>
+        )}
         {/* "Welcome back" is wrong for a first-time buddy following an invite. */}
         <h1 className="text-2xl font-bold tracking-tight">
-          {fromInvite ? "Sign in to cheer" : "Welcome back"}
+          {pendingEmoji
+            ? "One step and it's sent"
+            : fromInvite
+              ? "Sign in to cheer"
+              : "Welcome back"}
         </h1>
         <p className="text-muted-foreground text-pretty">
-          {fromInvite
-            ? "No account needed to watch — just to cheer them on. A magic link is the quickest way in."
-            : "Sign in to keep your streak going."}
+          {pendingEmoji
+            ? "We'll deliver your reaction the second you're in. A magic link is the quickest way — no password to make up."
+            : fromInvite
+              ? "No account needed to watch — just to cheer them on. A magic link is the quickest way in."
+              : "Sign in to keep your streak going."}
         </p>
       </div>
 

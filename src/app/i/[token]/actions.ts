@@ -2,14 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-
-/**
- * Reactions a buddy can send from the invite view. `reward` is owner→buddy
- * (later). Not exported — a "use server" file may only export async functions.
- */
-const BUDDY_REACTIONS = ["cheer", "nudge", "note"] as const;
-export type BuddyReaction = (typeof BUDDY_REACTIONS)[number];
-const VALID = new Set<string>(BUDDY_REACTIONS);
+// The list itself lives in a plain module: a "use server" file may only export
+// async functions, and the client bar + the page both need it too.
+import { isBuddyReaction } from "@/lib/reactions";
 
 export type ClaimResult = {
   result: "claimed" | "already" | "owner" | "not_found" | "unauthenticated";
@@ -52,7 +47,7 @@ export async function sendReaction(
   const type = String(formData.get("type") ?? "");
   const message = String(formData.get("message") ?? "").trim();
 
-  if (!VALID.has(type)) return { error: "Unknown reaction." };
+  if (!isBuddyReaction(type)) return { error: "Unknown reaction." };
   if (type === "note" && message.length === 0) {
     return { error: "Write a note first." };
   }

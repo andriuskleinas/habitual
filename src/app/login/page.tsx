@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { isInviteNext, safeNext } from "@/lib/auth";
+import { BUDDY_REACTIONS, parsePendingReaction } from "@/lib/reactions";
 import { Wordmark } from "@/components/brand";
 import { LoginForm } from "@/components/login-form";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -23,6 +24,18 @@ export default async function LoginPage({
   const { next, error } = await searchParams;
   const target = safeNext(next);
 
+  // A buddy who tapped "Cheer" on an invite arrives with their choice in tow
+  // (`/i/<token>?r=cheer`). Naming it here keeps the sign-in step feeling like
+  // the last step of something they started, not a gate in front of it.
+  const fromInvite = isInviteNext(target);
+  const pending = fromInvite
+    ? parsePendingReaction(
+        new URLSearchParams(target.split("?")[1] ?? "").get("r") ?? undefined,
+      )
+    : null;
+  const pendingEmoji =
+    BUDDY_REACTIONS.find((r) => r.type === pending)?.emoji ?? null;
+
   return (
     <>
       <header className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-8">
@@ -39,7 +52,8 @@ export default async function LoginPage({
             <LoginForm
               next={target}
               hadLinkError={!!error}
-              fromInvite={isInviteNext(target)}
+              fromInvite={fromInvite}
+              pendingEmoji={pendingEmoji}
             />
           </div>
 

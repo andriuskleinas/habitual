@@ -14,19 +14,24 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { claimInvite } from "./actions";
 import {
+  addDays,
   cadenceLabel,
   describeAllowance,
   evaluateChallenge,
   formatCount,
   formatDay,
   periodNoun,
+  schedulePeriods,
   todayISO,
   type AllowanceMode,
 } from "@/lib/challenges";
 import { Wordmark } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { BuddyReactions } from "@/components/buddy-reactions";
+import { BuddyReactions, CheerPrompt } from "@/components/buddy-reactions";
+import { parsePendingReaction } from "@/lib/reactions";
+import { ChainGrid } from "@/components/chain-grid";
 import { ReactionsFeed, type ReactionItem } from "@/components/reactions-feed";
+import { StickyCheerBar } from "@/components/sticky-cheer-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -65,10 +70,13 @@ const UUID_RE =
 
 export default async function InvitePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ token: string }>;
+  searchParams: Promise<{ r?: string }>;
 }) {
   const { token } = await params;
+  const { r } = await searchParams;
 
   // A malformed token would make the uuid-typed RPC arg throw — bail early.
   if (!UUID_RE.test(token)) notFound();
@@ -121,24 +129,82 @@ export default async function InvitePage({
   const dates = rows.map((r) => r.date);
   const today = todayISO();
 
-  const ev = evaluateChallenge(
-    {
-      cadence: view.cadence,
-      cadenceWeekday: view.cadence_weekday,
-      startDate: view.start_date,
-      endDate: view.end_date,
-      allowanceMode: view.allowance_mode,
-      allowanceValue: view.allowance_value,
-      maxMissesInRow: view.max_misses_in_row,
-      dailyTarget: view.daily_target,
-      totalTarget: view.total_target,
-    },
-    rows,
-    today,
-  );
+  const rules = {
+    cadence: view.cadence,
+    cadenceWeekday: view.cadence_weekday,
+    startDate: view.start_date,
+    endDate: view.end_date,
+    allowanceMode: view.allowance_mode,
+    allowanceValue: view.allowance_value,
+    maxMissesInRow: view.max_misses_in_row,
+    dailyTarget: view.daily_target,
+    totalTarget: view.total_target,
+  };
+  const ev = evaluateChallenge(rules, rows, today);
+  const periods = schedulePeriods({ ...rules, today });
+  const doneSet = new Set(dates);
   const noun = periodNoun(view.cadence);
   const owner = view.owner_name ?? "Someone";
   const loggedToday = dates.includes(today);
+
+  // "Day 12 of 30" — the one number that makes a lone streak of 1 legible as a
+  // beginning rather than as a failure.
+  const periodIndex = ev.coversToday
+    ? Math.min(ev.closedPeriods + 1, ev.totalPeriods ?? Infinity)
+    : null;
+
+  // How many distinct people have already reacted. Social proof when it's not
+  // zero; a "be first" prompt when it is.
+  const cheerers = new Set(
+    reactions.map((x) => x.from_name).filter(Boolean),
+  ).size;
+
+  const status =
+    ev.status === "failed"
+      ? "failed"
+      : ev.status === "won"
+        ? "won"
+        : ev.status === "upcoming"
+          ? "upcoming"
+          : loggedToday || !ev.dueNow
+            ? "ok"
+            : "due";
+
+  // "today" for a daily challenge, "this week" for a weekly one — the open slot
+  // is a period, and calling a weekly slot "today" makes the page look broken.
+  const slot = noun.one === "day" ? "today" : `this ${noun.one}`;
+
+  const headline =
+    status === "failed"
+      ? `${owner} blew it.${view.stake_text ? " Time to collect." : ""}`
+      : status === "won"
+        ? `${owner} finished the whole run. 🏆`
+        : status === "upcoming"
+          ? `Starts ${formatDay(view.start_date, { weekday: true })}.`
+          : loggedToday
+            ? `${owner} checked in today. 🔥`
+            : !ev.dueNow
+              ? `${owner} is square for this ${noun.one}.`
+              : `${owner} hasn't logged ${slot} yet.`;
+
+  // Why *this* visitor matters, right now. The ask lands far better when it's
+  // tied to the state of the run than as a generic "send a reaction".
+  const pitch =
+    status === "failed"
+      ? "The rules say it's over. A note lands better than a cheer right now."
+      : status === "won"
+        ? "They actually did it. That deserves something from you."
+        : status === "upcoming"
+          ? "Get in early — a cheer waiting on day one is hard to ignore."
+          : status === "due"
+            ? `The slot for ${slot} is still empty. A nudge from you is the entire point of this link.`
+            : ev.streak >= 7
+              ? `${ev.streak} ${noun.many} in a row. Tell them you noticed.`
+              : ev.donePeriods <= 3
+                ? "The first week is where most people quit. A cheer counts most now."
+                : "Someone watching is what makes this stick. Take ten seconds.";
+
+  const pending = parsePendingReaction(r);
 
   return (
     <>
@@ -146,8 +212,14 @@ export default async function InvitePage({
         <div className="mx-auto flex h-16 w-full max-w-3xl items-center justify-between px-5 sm:px-8">
           <Wordmark />
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
-              <span className="bg-success size-1.5 animate-pulse rounded-full" aria-hidden />
+            <span
+              className="text-muted-foreground inline-flex items-center gap-1.5 text-xs"
+              title="This page updates as they check in"
+            >
+              <span
+                className="bg-success size-1.5 animate-pulse rounded-full"
+                aria-hidden
+              />
               Live
               <Eye className="size-3.5" aria-hidden />
             </span>
@@ -158,80 +230,142 @@ export default async function InvitePage({
 
       <main
         id="main"
-        className="mx-auto w-full max-w-3xl flex-1 px-5 py-8 sm:px-8 sm:py-12"
+        className="mx-auto w-full max-w-3xl flex-1 px-5 pt-8 pb-28 sm:px-8 sm:py-12"
       >
-        <section className="flex flex-col gap-2">
-          <p className="text-muted-foreground text-sm">
-            You&apos;re watching{" "}
-            <span className="text-foreground font-medium">{owner}</span>&apos;s
-            challenge
-          </p>
+        {/* Hero — who, what, and how far in, in one glance */}
+        <section className="flex flex-col gap-3">
+          <div className="flex items-center gap-2.5">
+            <span
+              className="from-brand-from to-brand-to text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-sm font-semibold uppercase"
+              aria-hidden
+            >
+              {owner.slice(0, 1)}
+            </span>
+            <p className="text-muted-foreground text-sm text-pretty">
+              <span className="text-foreground font-medium">{owner}</span> asked
+              you to keep them honest
+            </p>
+          </div>
+
           <h1 className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
             {view.title}
           </h1>
-          <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-            <CalendarDays className="size-3.5" aria-hidden />
-            <span>
-              {cadenceLabel(view.cadence, view.cadence_weekday)} ·{" "}
+
+          <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs">
+            <span className="ring-foreground/10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1">
+              <CalendarDays className="size-3.5" aria-hidden />
+              {cadenceLabel(view.cadence, view.cadence_weekday)}
+            </span>
+            <span className="ring-foreground/10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1">
               {formatDay(view.start_date)}
               {view.end_date ? ` – ${formatDay(view.end_date)}` : ""}
             </span>
-          </p>
+            {periodIndex !== null && ev.totalPeriods !== null && (
+              <span className="text-primary bg-primary/10 inline-flex items-center rounded-full px-2.5 py-1 font-medium">
+                {`${noun.one[0].toUpperCase()}${noun.one.slice(1)} ${periodIndex} of ${ev.totalPeriods}`}
+              </span>
+            )}
+          </div>
         </section>
 
+        {/* The stake is the drama — it's why a buddy cares at all */}
         {view.stake_text && (
-          <section className="mt-5">
-            <div className="bg-accent/60 text-accent-foreground flex items-start gap-2.5 rounded-xl px-4 py-3">
-              <HandCoins className="mt-0.5 size-4 shrink-0" aria-hidden />
-              <p className="text-sm text-pretty">
-                <span className="font-medium">On the line: </span>
-                {view.stake_text}
-              </p>
+          <section aria-label="What's on the line" className="mt-5">
+            <div className="ring-primary/25 from-primary/10 via-primary/[0.05] flex items-start gap-3.5 rounded-2xl bg-gradient-to-r to-transparent px-4 py-4 ring-1 sm:px-5">
+              <span className="bg-primary/15 text-primary flex size-11 shrink-0 items-center justify-center rounded-xl">
+                <HandCoins className="size-5" aria-hidden />
+              </span>
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <p className="text-primary text-[0.7rem] font-semibold tracking-widest uppercase">
+                  On the line
+                </p>
+                <p className="text-base font-semibold text-pretty sm:text-lg">
+                  {view.stake_text}
+                </p>
+              </div>
             </div>
           </section>
         )}
 
         {/* Status line — the single fact a buddy opens this link for */}
-        <section className="mt-6">
+        <section className="mt-5">
           <div
             className={
-              ev.status === "failed"
-                ? "ring-destructive/25 bg-destructive/[0.07] flex items-center gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
-                : loggedToday || !ev.dueNow
-                  ? "ring-success/25 bg-success/10 flex items-center gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
-                  : "ring-foreground/10 bg-muted/40 flex items-center gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
+              status === "failed"
+                ? "ring-destructive/25 bg-destructive/[0.07] flex items-start gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
+                : status === "ok" || status === "won"
+                  ? "ring-success/25 bg-success/10 flex items-start gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
+                  : "ring-foreground/10 bg-muted/40 flex items-start gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
             }
           >
             <span
               className={
-                ev.status === "failed"
-                  ? "bg-destructive size-2.5 shrink-0 rounded-full"
-                  : loggedToday || !ev.dueNow
-                    ? "bg-success size-2.5 shrink-0 rounded-full"
-                    : "bg-muted-foreground/40 size-2.5 shrink-0 rounded-full"
+                status === "failed"
+                  ? "bg-destructive mt-1.5 size-2.5 shrink-0 rounded-full"
+                  : status === "ok" || status === "won"
+                    ? "bg-success mt-1.5 size-2.5 shrink-0 rounded-full"
+                    : "bg-muted-foreground/40 mt-1.5 size-2.5 shrink-0 rounded-full"
               }
               aria-hidden
             />
-            <span className="font-medium text-pretty">
-              {ev.status === "failed"
-                ? `${owner} blew it.${view.stake_text ? " Time to collect." : ""}`
-                : ev.status === "won"
-                  ? `${owner} finished the whole run. 🏆`
-                  : ev.status === "upcoming"
-                    ? `Starts ${formatDay(view.start_date, { weekday: true })}.`
-                    : loggedToday
-                      ? `${owner} checked in today. 🔥`
-                      : !ev.dueNow
-                        ? `${owner} is square for this ${noun.one}.`
-                        : `${owner} hasn't logged today yet.`}
+            <span className="flex flex-col gap-0.5">
+              <span className="font-medium text-pretty">{headline}</span>
+              <span className="text-muted-foreground text-pretty">{pitch}</span>
             </span>
           </div>
+        </section>
+
+        {/* Buddy action — the page's job. Sits directly under the news, before
+            the detail, because that's the moment the reaction is felt. */}
+        <section id="cheer" className="mt-5 scroll-mt-24">
+          {isOwner ? (
+            <Card className="border-border/60 border-dashed">
+              <CardContent className="flex flex-col items-center gap-2 py-6 text-center">
+                <p className="font-medium">This is your challenge</p>
+                <p className="text-muted-foreground text-sm text-pretty">
+                  This is exactly what your buddy sees. Manage it from the owner
+                  view.
+                </p>
+                <Button variant="outline" className="mt-2" asChild>
+                  <Link href={`/challenges/${view.id}`}>
+                    Open owner view
+                    <ArrowRight className="size-4" aria-hidden />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="ring-primary/25 bg-primary/[0.03]">
+              <CardContent className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1 text-center">
+                  <p className="text-lg font-semibold text-balance">
+                    Cheer {owner} on
+                  </p>
+                  <p className="text-muted-foreground text-sm text-pretty">
+                    {cheerers > 0
+                      ? `${cheerers} ${cheerers === 1 ? "person has" : "people have"} already reacted. They see yours the moment you send it.`
+                      : `Be the first to react — ${owner} sees it the moment you send it.`}
+                  </p>
+                </div>
+
+                {isSignedIn ? (
+                  <BuddyReactions
+                    token={token}
+                    ownerName={owner}
+                    pending={pending}
+                  />
+                ) : (
+                  <CheerPrompt token={token} ownerName={owner} />
+                )}
+              </CardContent>
+            </Card>
+          )}
         </section>
 
         {/* Stats */}
         <section
           aria-label="Progress"
-          className={`mt-4 grid gap-3 ${
+          className={`mt-8 grid gap-3 ${
             ev.skipsLeft !== null ? "grid-cols-3" : "grid-cols-2"
           }`}
         >
@@ -302,19 +436,14 @@ export default async function InvitePage({
           )}
         </section>
 
-        {(ev.skipsAllowed !== null || ev.maxMissesInRow !== null) && (
-          <p className="text-muted-foreground mt-2.5 text-xs text-pretty">
-            The deal:{" "}
-            {describeAllowance({
-              skipsAllowed: ev.skipsAllowed,
-              maxMissesInRow: ev.maxMissesInRow,
-              cadence: view.cadence,
-            }).toLowerCase()}
-          </p>
-        )}
-
         {ev.percent !== null && (
-          <section className="mt-3">
+          <section className="mt-3 flex flex-col gap-1.5">
+            {/* Just the percentage: the stat cards above already carry the
+                counts, and a second "days left" figure derived a different way
+                only ever reads as a contradiction. */}
+            <p className="text-muted-foreground text-xs tabular-nums">
+              {ev.percent}% of the run
+            </p>
             <div
               className="bg-muted h-2.5 w-full overflow-hidden rounded-full"
               role="progressbar"
@@ -325,9 +454,7 @@ export default async function InvitePage({
             >
               <div
                 className={`h-full rounded-full transition-all ${
-                  ev.status === "failed"
-                    ? "bg-muted-foreground/40"
-                    : "bg-primary"
+                  status === "failed" ? "bg-muted-foreground/40" : "bg-primary"
                 }`}
                 style={{ width: `${ev.percent}%` }}
               />
@@ -335,51 +462,24 @@ export default async function InvitePage({
           </section>
         )}
 
-        {/* Buddy action — cheer / nudge / note (claims the invite on first tap) */}
-        <section className="mt-8">
-          {isOwner ? (
-            <Card className="border-border/60 border-dashed">
-              <CardContent className="flex flex-col items-center gap-2 py-6 text-center">
-                <p className="font-medium">This is your challenge</p>
-                <p className="text-muted-foreground text-sm text-pretty">
-                  This is exactly what your buddy sees. Manage it from the owner
-                  view.
-                </p>
-                <Button variant="outline" className="mt-2" asChild>
-                  <Link href={`/challenges/${view.id}`}>
-                    Open owner view
-                    <ArrowRight className="size-4" aria-hidden />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ) : isSignedIn ? (
-            <Card>
-              <CardContent className="flex flex-col gap-3">
-                <div className="flex flex-col gap-0.5">
-                  <p className="font-medium">Cheer {owner} on</p>
-                  <p className="text-muted-foreground text-sm text-pretty">
-                    You&apos;re their accountability buddy. Send a reaction.
-                  </p>
-                </div>
-                <BuddyReactions token={token} />
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="border-primary/30 bg-primary/[0.04] border-dashed">
-              <CardContent className="flex flex-col items-center gap-2 py-8 text-center">
-                <p className="text-lg font-semibold">Cheer {owner} on</p>
-                <p className="text-muted-foreground max-w-sm text-sm text-pretty">
-                  Sign in to react and become their accountability buddy — one
-                  tap, no password.
-                </p>
-                <Button size="lg" className="mt-3" asChild>
-                  <Link href={`/login?next=/i/${token}`}>Sign in to cheer</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </section>
+        {/* The whole run at a glance — makes an early streak of 1 read as
+            "just started" instead of "barely trying". */}
+        {periods.length > 0 && (
+          <section className="mt-3">
+            <ChainGrid periods={periods} done={doneSet} today={today} legend />
+          </section>
+        )}
+
+        {(ev.skipsAllowed !== null || ev.maxMissesInRow !== null) && (
+          <p className="text-muted-foreground mt-2.5 text-xs text-pretty">
+            The deal:{" "}
+            {describeAllowance({
+              skipsAllowed: ev.skipsAllowed,
+              maxMissesInRow: ev.maxMissesInRow,
+              cadence: view.cadence,
+            }).toLowerCase()}
+          </p>
+        )}
 
         {/* Reactions wall */}
         {reactions.length > 0 && (
@@ -398,34 +498,41 @@ export default async function InvitePage({
               Recent
             </h2>
             <ul className="flex flex-col gap-2">
-              {rows.slice(0, 10).map((r) => (
+              {rows.slice(0, 10).map((row) => (
                 <li
-                  key={r.date}
+                  key={row.date}
                   className="ring-foreground/10 flex items-start gap-3 rounded-lg px-3 py-2 ring-1"
                 >
                   <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold">
-                    {formatDay(r.date)}
+                    {formatDay(row.date)}
                   </span>
                   <div className="flex min-w-0 flex-col">
-                    {ev.mode === "each" ? (
-                      <span className="text-sm font-medium tabular-nums">
-                        {r.value}{" "}
-                        <span className="text-muted-foreground font-normal">
-                          / {view.daily_target}
-                          {view.target_unit ? ` ${view.target_unit}` : ""}
-                        </span>
+                    <span className="text-sm font-medium tabular-nums">
+                      {ev.mode === "each" ? (
+                        <>
+                          {row.value}{" "}
+                          <span className="text-muted-foreground font-normal">
+                            / {view.daily_target}
+                            {view.target_unit ? ` ${view.target_unit}` : ""}
+                          </span>
+                        </>
+                      ) : ev.mode === "total" ? (
+                        `+${formatCount(row.value, view.target_unit)}`
+                      ) : (
+                        "Done ✓"
+                      )}
+                      <span className="text-muted-foreground ml-1.5 text-xs font-normal">
+                        {row.date === today
+                          ? "today"
+                          : row.date === addDays(today, -1)
+                            ? "yesterday"
+                            : ""}
                       </span>
-                    ) : ev.mode === "total" ? (
-                      <span className="text-sm font-medium tabular-nums">
-                        +{formatCount(r.value, view.target_unit)}
-                      </span>
-                    ) : null}
-                    {r.note ? (
+                    </span>
+                    {row.note && (
                       <span className="text-muted-foreground text-sm text-pretty">
-                        {r.note}
+                        {row.note}
                       </span>
-                    ) : (
-                      ev.mode === "tick" && <span className="text-sm">Done ✓</span>
                     )}
                   </div>
                 </li>
@@ -448,6 +555,11 @@ export default async function InvitePage({
                     Create a free account, set your own challenge, and send a
                     link like this one to a friend.
                   </p>
+                  <ol className="text-muted-foreground my-1 flex flex-col gap-1.5 text-sm sm:flex-row sm:gap-5">
+                    <Step n={1}>Pick a habit</Step>
+                    <Step n={2}>Put something on the line</Step>
+                    <Step n={3}>Send the link</Step>
+                  </ol>
                   <Button size="lg" className="mt-1" asChild>
                     <Link href={`/signup?next=/i/${token}`}>
                       Create a free account
@@ -512,6 +624,38 @@ export default async function InvitePage({
           Powered by Habitual · habits stick when someone&apos;s watching
         </footer>
       </main>
+
+      {/* Thumb-reach CTA once the card above has scrolled away (phones only).
+          A missed slot calls for a nudge, everything else for a cheer. */}
+      {!isOwner && (
+        <StickyCheerBar
+          watchId="cheer"
+          href={
+            isSignedIn
+              ? "#cheer"
+              : `/login?next=${encodeURIComponent(
+                  `/i/${token}?r=${status === "due" ? "nudge" : "cheer"}`,
+                )}`
+          }
+          label={
+            status === "due"
+              ? `👋 Nudge ${owner}`
+              : `🎉 Cheer ${owner} on`
+          }
+        />
+      )}
     </>
+  );
+}
+
+/** Numbered step in the "how it works" strip under the signed-out CTA. */
+function Step({ n, children }: { n: number; children: React.ReactNode }) {
+  return (
+    <li className="flex items-center justify-center gap-1.5">
+      <span className="bg-primary/10 text-primary flex size-5 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-semibold">
+        {n}
+      </span>
+      {children}
+    </li>
   );
 }

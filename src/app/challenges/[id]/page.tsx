@@ -22,9 +22,9 @@ import {
   periodNoun,
   schedulePeriods,
   todayISO,
-  type Period,
 } from "@/lib/challenges";
 import { AppHeader } from "@/components/app-header";
+import { ChainGrid } from "@/components/chain-grid";
 import { CheckInForm } from "@/components/check-in-form";
 import { TodayDone } from "@/components/today-done";
 import { ShareInvite } from "@/components/share-invite";
@@ -462,50 +462,5 @@ export default async function ChallengeDetailPage({
         </div>
       </main>
     </>
-  );
-}
-
-/**
- * One cell per scheduled check-in: filled when logged, red once a slot has
- * elapsed unfilled, outlined for the one that's live right now, faint for
- * what's still ahead. Decorative — the same numbers are stated above in text.
- */
-function ChainGrid({
-  periods,
-  done,
-  today,
-}: {
-  periods: Period[];
-  done: Set<string>;
-  today: string;
-}) {
-  return (
-    <div
-      className="ring-foreground/10 grid grid-cols-10 gap-1.5 rounded-2xl px-5 py-4 ring-1 sm:grid-cols-15"
-      aria-hidden
-    >
-      {periods.slice(0, 120).map((p) => {
-        const filled = [...done].some(
-          (d) => d >= p.start && d <= p.end,
-        );
-        const isPast = p.end < today;
-        const isNow = p.start <= today && today <= p.end;
-        return (
-          <span
-            key={p.start}
-            title={p.start === p.end ? p.start : `${p.start} – ${p.end}`}
-            className={
-              filled
-                ? "bg-primary aspect-square rounded-[4px]"
-                : isPast
-                  ? "bg-destructive/35 aspect-square rounded-[4px]"
-                  : isNow
-                    ? "ring-primary/60 aspect-square rounded-[4px] ring-2"
-                    : "bg-muted-foreground/15 aspect-square rounded-[4px]"
-            }
-          />
-        );
-      })}
-    </div>
   );
 }

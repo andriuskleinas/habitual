@@ -59,6 +59,15 @@ export async function celebrateCheckIn(streak = 0): Promise<void> {
 const MILESTONES = new Set([7, 21, 30, 66, 90, 100]);
 
 /**
+ * The same burst, fired when a *buddy* sends a reaction from the invite page.
+ * Sending a cheer is the moment a watcher becomes a participant, so it gets the
+ * same payoff the owner gets for checking in.
+ */
+export async function celebrateReaction(): Promise<void> {
+  return celebrateCheckIn(0);
+}
+
+/**
  * sessionStorage key used to hand a pending celebration from the check-in form
  * to the "done for today" card that replaces it. The form can't fire the
  * confetti itself: a successful log revalidates the page and unmounts it,
