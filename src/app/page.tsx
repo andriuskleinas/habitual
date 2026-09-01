@@ -351,7 +351,7 @@ export default function Home() {
                     Name what you lose if you bail. Your buddy sees it, which is
                     what makes it stick.
                   </p>
-                  <div className="bg-cheer/15 ring-cheer/25 mt-auto flex items-start gap-2.5 rounded-xl px-4 py-3 ring-1">
+                  <div className="bg-cheer/15 ring-cheer/25 chip-arrive mt-auto flex items-start gap-2.5 rounded-xl px-4 py-3 ring-1">
                     <HandCoins
                       className="text-cheer-ink mt-0.5 size-4 shrink-0"
                       aria-hidden
@@ -375,7 +375,7 @@ export default function Home() {
                     Send a link or show the QR code. Your buddy watches live —
                     no download, no account, no excuses.
                   </p>
-                  <div className="bg-primary/10 ring-primary/20 mt-auto flex items-center gap-2.5 rounded-xl px-4 py-3 ring-1">
+                  <div className="bg-primary/10 ring-primary/20 chip-arrive mt-auto flex items-center gap-2.5 rounded-xl px-4 py-3 ring-1">
                     <Link2 className="text-primary size-4 shrink-0" aria-hidden />
                     <span className="truncate font-mono text-sm">
                       habitual.app/j/7QK2M
@@ -398,7 +398,10 @@ export default function Home() {
                   {/* The two notes drift apart a little on hover — a reaction
                       wall that reads as alive rather than as a screenshot. */}
                   <div className="mt-auto flex flex-col gap-2 pt-4">
-                    <div className="bg-cheer/15 flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-transform duration-300 group-hover:-translate-x-1">
+                    <div
+                      className="bg-cheer/15 chip-arrive flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-transform duration-300 group-hover:-translate-x-1"
+                      style={{ "--chip-delay": "300ms" } as React.CSSProperties}
+                    >
                       <span className="text-base" aria-hidden>
                         🎉
                       </span>
@@ -407,7 +410,10 @@ export default function Home() {
                         <span className="text-muted-foreground">cheered you</span>
                       </span>
                     </div>
-                    <div className="bg-cheer/15 flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-transform duration-300 group-hover:translate-x-1">
+                    <div
+                      className="bg-cheer/15 chip-arrive flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-transform duration-300 group-hover:translate-x-1"
+                      style={{ "--chip-delay": "750ms" } as React.CSSProperties}
+                    >
                       <span className="text-base" aria-hidden>
                         👋
                       </span>
@@ -433,7 +439,7 @@ export default function Home() {
                     Mark it done or log a number, add a note, and take the
                     confetti. It&apos;s a five-second ritual by design.
                   </p>
-                  <div className="bg-success/15 ring-success/25 mt-auto flex items-center gap-2.5 rounded-xl px-4 py-3 ring-1">
+                  <div className="bg-success/15 ring-success/25 chip-arrive mt-auto flex items-center gap-2.5 rounded-xl px-4 py-3 ring-1">
                     <CheckCircle2
                       className="text-success-ink size-4 shrink-0"
                       aria-hidden

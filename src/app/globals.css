@@ -235,6 +235,21 @@
     transform: none;
   }
 
+  /* Feature-grid chips standing in for a live message or notification (a
+     buddy reaction, a copied invite link, a logged check-in). Hidden only
+     while the tile's own Reveal is armed — same fail-open reasoning as
+     `.reveal` above, so a no-JS visitor gets them in the initial HTML — and
+     once the tile lands, each pops in a beat later rather than with it, the
+     way a notification arrives on top of a screen instead of being part of
+     it. `--chip-delay` staggers siblings (see the two reaction chips). */
+  .reveal .chip-arrive {
+    opacity: 0;
+  }
+  .reveal[data-revealed="true"] .chip-arrive {
+    animation: chip-arrive 550ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--chip-delay, 250ms);
+  }
+
   /* Soft brand glow behind hero / CTA artwork. Two lobes — indigo above, green
      below — so the glow says "structure and progress" rather than just tinting
      the corner. */
@@ -307,6 +322,21 @@
   }
   50% {
     transform: translateY(-7px);
+  }
+}
+
+@keyframes chip-arrive {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.92);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
