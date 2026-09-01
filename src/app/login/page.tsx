@@ -15,12 +15,12 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; reason?: string }>;
 }) {
   // Read on the server and passed down: `useSearchParams` inside the form made
   // the whole page bail out to client-side rendering, so the sign-in form was
   // absent from the HTML until hydration.
-  const { next, error } = await searchParams;
+  const { next, error, reason } = await searchParams;
   const target = safeNext(next);
 
   // A buddy who tapped "Cheer" on an invite arrives with their choice in tow
@@ -48,6 +48,7 @@ export default async function LoginPage({
             <LoginForm
               next={target}
               hadLinkError={!!error}
+              signedOutForInactivity={reason === "inactivity"}
               fromInvite={fromInvite}
               pendingEmoji={pendingEmoji}
             />

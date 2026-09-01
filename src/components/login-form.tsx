@@ -3,7 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, KeyRound, Loader2, Mail, MailCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  KeyRound,
+  Loader2,
+  Mail,
+  MailCheck,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +29,7 @@ type Mode = "password" | "magic";
 export function LoginForm({
   next,
   hadLinkError = false,
+  signedOutForInactivity = false,
   fromInvite = false,
   pendingEmoji = null,
 }: {
@@ -29,6 +37,8 @@ export function LoginForm({
   next: string;
   /** True when redirected here after a failed magic-link exchange. */
   hadLinkError?: boolean;
+  /** True when the idle-timeout watcher signed them out, not a manual click. */
+  signedOutForInactivity?: boolean;
   /** Arrived from a buddy invite — almost certainly a first-time visitor. */
   fromInvite?: boolean;
   /** Emoji of the reaction they picked before signing in, if any. */
@@ -158,6 +168,14 @@ export function LoginForm({
               : "Sign in to keep your streak going."}
         </p>
       </div>
+
+      {signedOutForInactivity && (
+        <p className="text-muted-foreground ring-foreground/10 flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm ring-1">
+          <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
+          Signed out after a while away. Sign back in to pick up where you
+          left off.
+        </p>
+      )}
 
       {/* Mode switch — password first, magic link still one tap away. */}
       <div
