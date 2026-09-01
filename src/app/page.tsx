@@ -3,6 +3,7 @@ import {
   ArrowRight,
   BellRing,
   CalendarCheck,
+  CheckCircle2,
   Eye,
   Flame,
   HandCoins,
@@ -18,6 +19,7 @@ import { SiteHeader } from "@/components/site-header";
 import { HeroPreview } from "@/components/marketing/hero-preview";
 import { ChainDemo } from "@/components/marketing/chain-demo";
 import { Faq, FAQS } from "@/components/marketing/faq";
+import { LogoGlyph } from "@/components/brand";
 import { Reveal } from "@/components/reveal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -373,30 +375,29 @@ export default function Home() {
                     Send a link or show the QR code. Your buddy watches live —
                     no download, no account, no excuses.
                   </p>
+                  <div className="bg-primary/10 ring-primary/20 mt-auto flex items-center gap-2.5 rounded-xl px-4 py-3 ring-1">
+                    <Link2 className="text-primary size-4 shrink-0" aria-hidden />
+                    <span className="truncate font-mono text-sm">
+                      habitual.app/j/7QK2M
+                    </span>
+                  </div>
                 </div>
               </Reveal>
 
-              {/* Reactions — wide tile */}
-              <Reveal delay={90} className="md:col-span-2">
-                <div
-                  className={cn(
-                    TILE,
-                    "gap-4 p-6 sm:flex-row sm:items-center sm:gap-8 sm:p-8",
-                  )}
-                >
-                  <div className="flex flex-col gap-3 sm:flex-1">
-                    <IconTile icon={BellRing} tone="cheer" />
-                    <h3 className="mt-2 text-xl font-semibold">
-                      Cheers when you&apos;re winning, nudges when you&apos;re not
-                    </h3>
-                    <p className="text-muted-foreground text-pretty">
-                      Your buddy can cheer, nudge or leave a note in one tap.
-                      Encouragement lands the day it matters.
-                    </p>
-                  </div>
+              {/* Reactions */}
+              <Reveal delay={90}>
+                <div className={cn(TILE, "gap-3 p-6 sm:p-8")}>
+                  <IconTile icon={BellRing} tone="cheer" />
+                  <h3 className="mt-2 text-xl font-semibold text-balance">
+                    Cheers when you&apos;re winning, nudges when you&apos;re not
+                  </h3>
+                  <p className="text-muted-foreground text-pretty">
+                    Your buddy can cheer, nudge or leave a note in one tap.
+                    Encouragement lands the day it matters.
+                  </p>
                   {/* The two notes drift apart a little on hover — a reaction
                       wall that reads as alive rather than as a screenshot. */}
-                  <div className="flex flex-col gap-2 sm:w-64">
+                  <div className="mt-auto flex flex-col gap-2 pt-4">
                     <div className="bg-cheer/15 flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-transform duration-300 group-hover:-translate-x-1">
                       <span className="text-base" aria-hidden>
                         🎉
@@ -432,6 +433,16 @@ export default function Home() {
                     Mark it done or log a number, add a note, and take the
                     confetti. It&apos;s a five-second ritual by design.
                   </p>
+                  <div className="bg-success/15 ring-success/25 mt-auto flex items-center gap-2.5 rounded-xl px-4 py-3 ring-1">
+                    <CheckCircle2
+                      className="text-success-ink size-4 shrink-0"
+                      aria-hidden
+                    />
+                    <p className="text-sm text-pretty">
+                      <span className="font-medium">Day 12 done. </span>
+                      <span className="text-muted-foreground">20 pages read.</span>
+                    </p>
+                  </div>
                 </div>
               </Reveal>
             </div>
@@ -506,7 +517,7 @@ export default function Home() {
       <footer className="border-t">
         <div className="text-muted-foreground mx-auto flex w-full max-w-6xl flex-col items-center gap-4 px-5 py-10 text-sm sm:flex-row sm:justify-between sm:px-8">
           <div className="flex items-center gap-2">
-            <Flame className="text-primary size-4" aria-hidden />
+            <LogoGlyph className="text-primary h-4 w-auto shrink-0" />
             <span>
               Habitual — habits stick when someone&apos;s watching.
             </span>
