@@ -58,7 +58,7 @@ export function ReactionsFeed({ reactions }: { reactions: ReactionItem[] }) {
                 </span>
               </p>
               {r.message && (
-                <p className="text-muted-foreground text-sm text-pretty">
+                <p className="text-muted-foreground text-sm text-pretty break-all">
                   “{r.message}”
                 </p>
               )}

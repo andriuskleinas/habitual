@@ -387,7 +387,7 @@ export default async function DashboardPage() {
                           <div className="flex min-w-0 flex-col gap-0.5">
                             <Link
                               href={`/i/${token}`}
-                              className="rounded-sm leading-snug font-medium hover:underline after:absolute after:inset-0"
+                              className="rounded-sm leading-snug font-medium break-all hover:underline after:absolute after:inset-0"
                             >
                               {c.title}
                             </Link>
@@ -655,7 +655,7 @@ function ChallengeCard({
           <div className="flex min-w-0 flex-col gap-0.5">
             <Link
               href={`/challenges/${c.id}`}
-              className="rounded-sm leading-snug font-medium hover:underline after:absolute after:inset-0"
+              className="rounded-sm leading-snug font-medium break-all hover:underline after:absolute after:inset-0"
             >
               {c.title}
             </Link>
@@ -688,7 +688,7 @@ function ChallengeCard({
               )}
               aria-hidden
             />
-            <span className="min-w-0 line-clamp-1">
+            <span className="min-w-0 line-clamp-1 break-all">
               <span className="text-muted-foreground">On the line: </span>
               <span className="font-medium">{c.stake_text}</span>
             </span>
@@ -812,7 +812,10 @@ function BuddyChip({
           <Heart className="size-3.5" aria-hidden />
           <span className="tabular-nums">{cheers}</span>
           <span className="sr-only">
-            cheer{cheers === 1 ? "" : "s"} from your buddy
+            {/* The heart icon stands for any reaction type (cheer, nudge,
+                note) — labelling it "cheer" told screen-reader users a nudge
+                was praise. */}
+            reaction{cheers === 1 ? "" : "s"} from your buddy
           </span>
         </span>
       )}

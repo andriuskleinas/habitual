@@ -280,13 +280,13 @@ export default async function InvitePage({
             >
               {owner.slice(0, 1)}
             </span>
-            <p className="text-muted-foreground text-sm text-pretty">
+            <p className="text-muted-foreground min-w-0 text-sm text-pretty break-all">
               <span className="text-foreground font-medium">{owner}</span> asked
               you to keep them honest
             </p>
           </div>
 
-          <h1 className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-balance break-all sm:text-3xl">
             {view.title}
           </h1>
 
@@ -320,7 +320,7 @@ export default async function InvitePage({
                 <p className="text-cheer-ink text-[0.7rem] font-semibold tracking-widest uppercase">
                   On the line
                 </p>
-                <p className="text-base font-semibold text-pretty sm:text-lg">
+                <p className="text-base font-semibold text-pretty break-all sm:text-lg">
                   {view.stake_text}
                 </p>
               </div>
@@ -571,7 +571,7 @@ export default async function InvitePage({
                       </span>
                     </span>
                     {row.note && (
-                      <span className="text-muted-foreground text-sm text-pretty">
+                      <span className="text-muted-foreground text-sm text-pretty break-all">
                         {row.note}
                       </span>
                     )}

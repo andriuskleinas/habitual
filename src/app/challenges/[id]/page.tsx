@@ -137,7 +137,7 @@ export default async function ChallengeDetailPage({
               {challenge.end_date ? ` – ${formatDay(challenge.end_date)}` : ""}
             </span>
           </p>
-          <h1 className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-balance break-all sm:text-3xl">
             {challenge.title}
           </h1>
         </div>
@@ -201,7 +201,7 @@ export default async function ChallengeDetailPage({
                 <p className="text-cheer-ink text-[0.7rem] font-semibold tracking-widest uppercase">
                   On the line
                 </p>
-                <p className="text-base font-semibold text-pretty sm:text-lg">
+                <p className="text-base font-semibold text-pretty break-all sm:text-lg">
                   {challenge.stake_text}
                 </p>
               </div>
@@ -392,7 +392,7 @@ export default async function ChallengeDetailPage({
                           </span>
                         ) : null}
                         {r.note ? (
-                          <span className="text-muted-foreground text-sm text-pretty">
+                          <span className="text-muted-foreground text-sm text-pretty break-all">
                             {r.note}
                           </span>
                         ) : (
