@@ -400,7 +400,7 @@ export default function Home() {
                   <div className="mt-auto flex flex-col gap-2 pt-4">
                     <div
                       className="bg-cheer/15 chip-arrive flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-transform duration-300 group-hover:-translate-x-1"
-                      style={{ "--chip-delay": "300ms" } as React.CSSProperties}
+                      style={{ "--chip-delay": "700ms" } as React.CSSProperties}
                     >
                       <span className="text-base" aria-hidden>
                         🎉
@@ -412,7 +412,7 @@ export default function Home() {
                     </div>
                     <div
                       className="bg-cheer/15 chip-arrive flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-transform duration-300 group-hover:translate-x-1"
-                      style={{ "--chip-delay": "750ms" } as React.CSSProperties}
+                      style={{ "--chip-delay": "1450ms" } as React.CSSProperties}
                     >
                       <span className="text-base" aria-hidden>
                         👋
