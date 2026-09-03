@@ -1,9 +1,14 @@
 name: Supabase keep-alive
 
 # Supabase pauses Free Plan projects after ~7 days with too little database
-# API traffic. This pings a lightweight read-only endpoint daily so the
-# project is never a candidate for pausing. Runs well inside the 7-day
-# window on purpose, so a missed/delayed run or two is harmless.
+# API traffic. This pings a lightweight read-only endpoint every 5 days so
+# the project is never a candidate for pausing, with 2 days of slack for a
+# missed/delayed run before it'd matter.
+#
+# Cron's day-of-month field can't express "every 5 days" across month
+# boundaries exactly (it fires on days 1, 6, 11, 16, 21, 26, 31) — the gap
+# from the 26th/31st into next month is occasionally 1-6 days instead of
+# 5, but it's always comfortably under the 7-day pause window.
 #
 # The URL and key below are the NEXT_PUBLIC_* Supabase values already
 # shipped to every browser that loads the app (see README's Environment
@@ -11,7 +16,7 @@ name: Supabase keep-alive
 
 on:
   schedule:
-    - cron: "0 12 * * *" # daily at 12:00 UTC
+    - cron: "0 12 */5 * *" # every 5 days at 12:00 UTC
   workflow_dispatch: {} # allows a manual "Run workflow" for testing
 
 jobs:
