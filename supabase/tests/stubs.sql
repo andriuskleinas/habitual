@@ -38,6 +38,10 @@ as $$
 $$;
 grant execute on function auth.uid() to anon, authenticated, service_role;
 
+-- Supabase keeps extensions out of public; the first migration installs
+-- pgcrypto there.
+create schema extensions;
+
 create schema vault;
 create table vault.decrypted_secrets (name text primary key, decrypted_secret text);
 

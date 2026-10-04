@@ -70,18 +70,19 @@ flowchart LR
   V -->|SECURITY DEFINER RPCs| S
   S -->|magic link, PKCE callback| V
   S -->|pg_net, webhook from Vault| SL[Slack: new signup]
-  GH[GitHub Actions] -->|keep-alive ping| S
+  GH[GitHub Actions] -->|keep-alive write, twice a day| S
+  VC[Vercel Cron] -->|daily /api/keepalive| V
 ```
 
 | Layer | Choices |
 |---|---|
 | **Frontend** | Next.js 15 App Router (Server Components, streaming `loading.tsx` routes), React 19, Tailwind CSS 4, shadcn/ui on Radix primitives, `lucide-react`, `qrcode.react`, `canvas-confetti` |
-| **Backend** | Server Actions are the backend: mutations live in `actions.ts` next to the routes that use them. The only route handler is the auth callback. |
+| **Backend** | Server Actions are the backend: mutations live in `actions.ts` next to the routes that use them. The only route handlers are the auth callback and a cron keep-alive. |
 | **Database** | Supabase Postgres, 5 tables with row-level security on every one, versioned SQL in [`supabase/migrations/`](./supabase/migrations). Cross-user reads (invite lookup, claiming an invite, reactions with names) go through narrow `SECURITY DEFINER` RPCs. `CHECK` constraints guard cadences and skip rules; a unique constraint enforces one check-in per day. |
 | **Scoring** | One pure module, `src/lib/challenges.ts`, derives streaks, progress, skips and win/fail state from raw check-ins on every read. Nothing about status is stored. |
 | **Auth** | Supabase Auth: email + password or magic link (PKCE), password reset, email change, a magic-link buddy can add a password to become a full account, 30-minute idle sign-out |
 | **Quality** | 17 unit tests on the scoring engine (Node's built-in test runner, no extra deps) and 30 SQL tests of the access rules, run against a throwaway Postgres; GitHub Actions runs typecheck, lint, both test suites and a production build on every push |
-| **Automation** | A Postgres trigger + `pg_net` posts a Slack alert on each confirmed signup (webhook URL kept in Vault); a scheduled GitHub Action keeps the free-tier Supabase project from pausing |
+| **Automation** | A Postgres trigger + `pg_net` posts a Slack alert on each confirmed signup (webhook URL kept in Vault); a keep-alive RPC writes a heartbeat twice a day from GitHub Actions and daily from Vercel Cron, and the Action restores the project through the Management API if it ever finds it paused |
 | **Hosting** | Vercel, deployed from `main` |
 
 ### Engineering highlights
@@ -96,6 +97,10 @@ flowchart LR
 - **Access rules are tested, not assumed.** [`supabase/tests/rls_test.sql`](./supabase/tests/rls_test.sql)
   plays an owner, a buddy, a stranger and a signed-out visitor against the real migrations and
   checks each one sees and can change exactly what they should.
+- **A keep-alive that's actually alive.** Free-tier Supabase projects pause after a quiet week, and
+  a read-only ping turned out not to count. Two independent schedulers (GitHub Actions and Vercel
+  Cron) call a `keepalive()` RPC that writes a heartbeat row, and if a ping ever fails because the
+  project paused anyway, the Action restores it through the Management API.
 - **Only the anon key, anywhere.** There's no service-role key in this codebase. Every query runs as
   the signed-in user (or anonymous) and is checked by Postgres.
 - **One clock.** Dates are UTC calendar days, always produced and compared through the same

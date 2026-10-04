@@ -18,8 +18,9 @@ here and no bundled docs to consult.
 
 ## Conventions that will bite you
 
-- **Server actions are the backend.** The only route handler is
-  `src/app/auth/callback/route.ts`. Don't add API routes for things an action can do.
+- **Server actions are the backend.** The only route handlers are
+  `src/app/auth/callback/route.ts` and `src/app/api/keepalive/route.ts` (Vercel
+  Cron can only make a GET). Don't add API routes for things an action can do.
 - **A `"use server"` file may only export async functions.** Exporting a const
   array from one crashes the route at build time; keep constants un-exported or
   move them to a plain module.
@@ -31,19 +32,23 @@ here and no bundled docs to consult.
   (`reactions_for_challenge`, `challenge_by_invite`) exist for. Don't join `users`
   hoping to show a buddy's name.
 - **Every schema change ships as a migration file.** `supabase/migrations/`
-  starts from `20261004000000_baseline.sql`, a snapshot of the live schema
-  (the project had no migration history before that). Add a new timestamped
-  file for each change, apply that same SQL to the remote project via MCP,
-  and extend `supabase/tests/rls_test.sql` when access rules change. Confirm
-  `get_project_url` returns the Habitual project before any schema work.
-  The live project's migration history doesn't list the baseline, so never
-  `supabase db push` to it without first running
-  `supabase migration repair --status applied 20261004000000`.
+  mirrors the remote project's migration history one-to-one (same versions,
+  same SQL). Apply a change with the MCP `apply_migration` tool, then save the
+  same SQL in the repo under the version it recorded
+  (`select version, name from supabase_migrations.schema_migrations`), so the
+  two never drift. Extend `supabase/tests/rls_test.sql` when access rules
+  change. Confirm `get_project_url` returns the Habitual project first.
 - **`src/lib/challenges.ts` is the single source of truth for challenge scoring.**
   `evaluateChallenge()` works in *periods* (one slot to fill), not calendar days.
   Status is derived on every read, never persisted.
 - **Dates are UTC calendar days** (`YYYY-MM-DD`). Always go through `todayISO()` /
   `addDays()` so what gets written and what gets compared agree.
+- **Don't remove the keep-alive.** The free-tier project pauses after ~7 days
+  of low database activity, and a read-only ping was not enough (it paused
+  twice within 5 days of one). `public.keepalive()` writes a heartbeat; it's
+  called twice a day by `.github/workflows/supabase-keepalive.yml` and daily
+  by Vercel Cron (`vercel.json` → `/api/keepalive`). `select * from
+  private.heartbeat` shows the last ping and which scheduler sent it.
 - Dark mode is class-based, resolved pre-paint by `ThemeScript`. The variant is
   `&:where(.dark, .dark *)` so it also matches `<html>` itself. **It is an
   account feature**: the only control is the picker on `/account`, and with

@@ -214,4 +214,27 @@ select pg_temp.check(
   (select count(*) from public.buddies where challenge_id = '11111111-0000-0000-0000-000000000000') = 2,
   'the second buddy got their own row');
 
+-- --------------------------------------------------------------------------
+-- Keep-alive heartbeat
+-- --------------------------------------------------------------------------
+
+select pg_temp.as_user(null);
+
+select pg_temp.check(keepalive('github') is not null,
+  'anon can call keepalive()');
+
+do $$
+begin
+  perform * from private.heartbeat;
+  raise exception 'FAIL: anon read the heartbeat table directly';
+exception when insufficient_privilege then
+  raise notice 'ok - the heartbeat table is only reachable through the RPC';
+end
+$$;
+
+reset role;
+select pg_temp.check(
+  (select count(*) = 1 and bool_and(source = 'github') from private.heartbeat),
+  'keepalive() updates the single heartbeat row in place');
+
 \echo 'All access-rule tests passed.'
