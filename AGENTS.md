@@ -61,4 +61,8 @@ here and no bundled docs to consult.
   `npm install`, clear `.next` and restart, or the client bundle silently breaks
   while `npm run build` stays green.
 - Don't run `npm run build` against a live dev server; they share `.next`.
-- Verify with `npx tsc --noEmit` and `npx eslint` before calling anything done.
+- Verify with `npm run typecheck`, `npm run lint` and `npm test` before calling
+  anything done. CI (`.github/workflows/ci.yml`) runs the same three plus a build.
+- `npm test` is Node's built-in runner over `src/**/*.test.ts` (type stripping,
+  Node 22.18+). Test files import with the `.ts` extension, which is why
+  `tsconfig.json` sets `allowImportingTsExtensions`. Pin `today` in every case.
