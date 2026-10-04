@@ -30,10 +30,15 @@ here and no bundled docs to consult.
   person's name, ever, via a normal query — that's what the `SECURITY DEFINER` RPCs
   (`reactions_for_challenge`, `challenge_by_invite`) exist for. Don't join `users`
   hoping to show a buddy's name.
-- **Migrations are applied to the remote Supabase project via MCP and are not
-  tracked in this repo** (there is no `supabase/migrations/`). A fresh clone
-  reproduces no schema. Confirm `get_project_url` returns the Habitual project
-  before any schema work.
+- **Every schema change ships as a migration file.** `supabase/migrations/`
+  starts from `20261004000000_baseline.sql`, a snapshot of the live schema
+  (the project had no migration history before that). Add a new timestamped
+  file for each change, apply that same SQL to the remote project via MCP,
+  and extend `supabase/tests/rls_test.sql` when access rules change. Confirm
+  `get_project_url` returns the Habitual project before any schema work.
+  The live project's migration history doesn't list the baseline, so never
+  `supabase db push` to it without first running
+  `supabase migration repair --status applied 20261004000000`.
 - **`src/lib/challenges.ts` is the single source of truth for challenge scoring.**
   `evaluateChallenge()` works in *periods* (one slot to fill), not calendar days.
   Status is derived on every read, never persisted.
@@ -62,7 +67,8 @@ here and no bundled docs to consult.
   while `npm run build` stays green.
 - Don't run `npm run build` against a live dev server; they share `.next`.
 - Verify with `npm run typecheck`, `npm run lint` and `npm test` before calling
-  anything done. CI (`.github/workflows/ci.yml`) runs the same three plus a build.
+  anything done (plus `npm run test:db` after schema changes). CI
+  (`.github/workflows/ci.yml`) runs all four plus a build.
 - `npm test` is Node's built-in runner over `src/**/*.test.ts` (type stripping,
   Node 22.18+). Test files import with the `.ts` extension, which is why
   `tsconfig.json` sets `allowImportingTsExtensions`. Pin `today` in every case.
