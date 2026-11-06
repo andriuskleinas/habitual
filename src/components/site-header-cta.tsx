@@ -56,7 +56,7 @@ export function SiteHeaderCta() {
 
   if (signedIn) {
     return (
-      <Button size="sm" asChild>
+      <Button variant="inverse" size="lg" asChild>
         <Link href="/dashboard">
           <LayoutDashboard className="size-4" aria-hidden />
           Dashboard
@@ -67,10 +67,15 @@ export function SiteHeaderCta() {
 
   return (
     <>
-      <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
+      <Button
+        variant="inverse-ghost"
+        size="lg"
+        className="hidden sm:inline-flex"
+        asChild
+      >
         <Link href="/login">Sign in</Link>
       </Button>
-      <Button size="sm" asChild>
+      <Button variant="inverse" size="lg" asChild>
         <Link href="/signup">Start free</Link>
       </Button>
     </>

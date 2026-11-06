@@ -20,7 +20,8 @@ export function LogoMark({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "from-brand-from to-brand-to text-primary-foreground flex size-8 items-center justify-center rounded-lg bg-gradient-to-br shadow-sm",
+        // Flat: a gradient is invisible at 32px and only reads as "template".
+        "bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-[9px]",
         className,
       )}
     >
@@ -46,7 +47,7 @@ export function Wordmark({
   const inner = (
     <>
       <LogoMark />
-      <span className="text-lg font-semibold tracking-tight">Habitual</span>
+      <span className="text-lg font-medium tracking-[-0.03em]">Habitual</span>
     </>
   );
 
