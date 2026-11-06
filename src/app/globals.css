@@ -12,6 +12,7 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+  --font-serif: var(--font-instrument-serif);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -62,6 +63,17 @@
   --color-cheer-ink: var(--warning-ink);
   --color-brand-from: var(--brand-from);
   --color-brand-to: var(--brand-to);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-ink-line: var(--ink-line);
+  --color-ink-accent: var(--ink-accent);
+  --color-pastel-lavender: var(--pastel-lavender);
+  --color-pastel-amber: var(--pastel-amber);
+  --color-pastel-sky: var(--pastel-sky);
+  --color-pastel-mint: var(--pastel-mint);
+  --color-pastel-foreground: var(--pastel-foreground);
 }
 
 /* ---------------------------------------------------------------------------
@@ -82,6 +94,17 @@
 
    Neutrals carry a trace of the indigo hue (268) rather than being dead grey,
    so the greys sit in the same family as the brand instead of beside it.
+
+   Two marketing-only families sit beside the brand colours:
+
+     Ink        the near-black band behind the landing hero, statement and
+                closing sections. A fixed section colour, NOT dark mode: it is
+                the same for every visitor, so anonymous visitors still get the
+                light theme everywhere else.
+     Pastels    tinted surfaces for illustrations, never for data. On the
+                "How it works" cards each follows its step's role (amber for
+                the stake, mint for the streak, lavender and sky for setup and
+                sharing); on the hero's example cards they're decoration.
 --------------------------------------------------------------------------- */
 
 :root {
@@ -119,6 +142,17 @@
      colour with depth, not as two competing ones. */
   --brand-from: oklch(0.46 0.155 268);
   --brand-to: oklch(0.6 0.15 245);
+  --ink: oklch(0.16 0.02 268);
+  --ink-foreground: oklch(0.99 0 0);
+  --ink-muted: oklch(0.76 0.025 268);
+  --ink-subtle: oklch(0.66 0.03 268);
+  --ink-line: oklch(1 0 0 / 10%);
+  --ink-accent: oklch(0.86 0.1 156);
+  --pastel-lavender: oklch(0.91 0.04 290);
+  --pastel-amber: oklch(0.92 0.08 88);
+  --pastel-sky: oklch(0.9 0.05 255);
+  --pastel-mint: oklch(0.92 0.06 158);
+  --pastel-foreground: oklch(0.19 0.028 268);
   --radius: 0.75rem;
   --sidebar: oklch(0.985 0.004 268);
   --sidebar-foreground: oklch(0.19 0.028 268);
@@ -165,6 +199,14 @@
   --chart-5: oklch(0.76 0.09 205);
   --brand-from: oklch(0.62 0.16 268);
   --brand-to: oklch(0.72 0.13 240);
+  /* A shade below the dark page background, so the band still reads as a
+     band for a signed-in visitor who has chosen dark mode. */
+  --ink: oklch(0.13 0.02 268);
+  --pastel-lavender: oklch(0.3 0.06 290);
+  --pastel-amber: oklch(0.32 0.05 85);
+  --pastel-sky: oklch(0.3 0.05 255);
+  --pastel-mint: oklch(0.31 0.05 158);
+  --pastel-foreground: oklch(0.97 0.005 268);
   --sidebar: oklch(0.215 0.026 268);
   --sidebar-foreground: oklch(0.97 0.005 268);
   --sidebar-primary: oklch(0.72 0.135 268);
@@ -235,51 +277,10 @@
     transform: none;
   }
 
-  /* Feature-grid chips standing in for a live message or notification (a
-     buddy reaction, a copied invite link, a logged check-in). Hidden only
-     while the tile's own Reveal is armed — same fail-open reasoning as
-     `.reveal` above, so a no-JS visitor gets them in the initial HTML.
-     The tile lands first and sits still for a beat — long enough to read as
-     "someone else's move" rather than part of the tile's own entrance —
-     then the chip springs in the way a phone notification does: overshoot
-     past full size and settle, not a plain fade. `--chip-delay` staggers
-     siblings (see the two reaction chips, arriving as separate messages). */
-  .reveal .chip-arrive {
-    opacity: 0;
-  }
-  .reveal[data-revealed="true"] .chip-arrive {
-    animation: chip-arrive 650ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    animation-delay: var(--chip-delay, 2s);
-  }
-
-  /* Soft brand glow behind hero / CTA artwork. Two lobes — indigo above, green
-     below — so the glow says "structure and progress" rather than just tinting
-     the corner. */
-  .brand-glow {
-    background-image:
-      radial-gradient(
-        50% 50% at 42% 28%,
-        color-mix(in oklch, var(--brand-from), transparent 76%),
-        transparent 72%
-      ),
-      radial-gradient(
-        45% 45% at 72% 78%,
-        color-mix(in oklch, var(--success), transparent 82%),
-        transparent 70%
-      );
-  }
-
-  /* Faint dot grid — adds depth to large empty sections without noise. */
-  .dot-grid {
-    background-image: radial-gradient(
-      currentColor 1px,
-      transparent 1px
-    );
-    background-size: 22px 22px;
-  }
-
   /* Standard hover for anything card-shaped and clickable. One utility rather
-     than five hand-rolled variants, so a card behaves the same on every page. */
+     than five hand-rolled variants, so a card behaves the same on every page.
+     Only for things you can click: a static card that moves on hover promises
+     an action that isn't there. */
   .lift {
     transition:
       transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
@@ -291,15 +292,31 @@
     transform: translateY(-3px);
   }
 
-  /* A chain cell landing. Used when a link is added to a streak — on the
-     interactive hero, and when the feature-grid chain draws itself in. */
-  .animate-cell-pop {
-    animation: cell-pop 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  /* The near-black marketing band. Re-points the focus ring at the band's
+     text colour: the indigo ring is under 3:1 against ink. */
+  .band-ink {
+    background-color: var(--ink);
+    color: var(--ink-foreground);
+    --ring: var(--ink-foreground);
   }
 
-  /* Slow drift for the floating stake chip, so the hero isn't dead still. */
-  .animate-drift {
-    animation: drift 7s ease-in-out infinite;
+  /* A missed slot in a chain: an empty outlined cell with one diagonal stroke,
+     so a miss reads as a miss and not as a day still to come. */
+  .cell-missed {
+    box-shadow: inset 0 0 0 1.5px var(--border);
+    background-image: linear-gradient(
+      to top right,
+      transparent calc(50% - 0.75px),
+      color-mix(in oklch, var(--destructive), transparent 25%) calc(50% - 0.75px),
+      color-mix(in oklch, var(--destructive), transparent 25%) calc(50% + 0.75px),
+      transparent calc(50% + 0.75px)
+    );
+  }
+
+  /* A chain cell landing: the hero demo's chain filling in on load, and the
+     open slot filling when the visitor checks in. */
+  .animate-cell-pop {
+    animation: cell-pop 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 }
 
@@ -314,34 +331,6 @@
   100% {
     opacity: 1;
     transform: scale(1);
-  }
-}
-
-@keyframes drift {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-7px);
-  }
-}
-
-@keyframes chip-arrive {
-  0% {
-    opacity: 0;
-    transform: translateY(18px) scale(0.4);
-  }
-  45% {
-    opacity: 1;
-    transform: translateY(-6px) scale(1.08);
-  }
-  70% {
-    transform: translateY(2px) scale(0.97);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 

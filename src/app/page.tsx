@@ -1,122 +1,144 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  BellRing,
-  CalendarCheck,
-  CheckCircle2,
-  Eye,
-  Flame,
-  HandCoins,
-  Link2,
-  type LucideIcon,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  Users,
-  Zap,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { HeroPreview } from "@/components/marketing/hero-preview";
-import { ChainDemo } from "@/components/marketing/chain-demo";
 import { Faq, FAQS } from "@/components/marketing/faq";
 import { LogoGlyph } from "@/components/brand";
 import { Reveal } from "@/components/reveal";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /**
- * Colour carries meaning on this page, the same meaning it carries in the app:
- * indigo is structure and navigation, green is a kept commitment, amber is
- * someone reminding you. An icon tile picks its tone from what it's about, not
- * from where it sits in the grid.
+ * Type does the work on this page. Headlines are large, regular weight and
+ * tracked tight; one phrase per section may be set in the serif italic, and
+ * never more than one. Numbers stay in the sans: the serif's "1" has no flag,
+ * so a streak of 11 would read as "ll". Sections alternate between the ink band and the page
+ * background instead of being boxed.
+ *
+ * Colour still carries the app's meaning: indigo is an action, green is a kept
+ * day, amber is the stake. The pastels are illustration surfaces only.
  */
-type Tone = "brand" | "progress" | "cheer";
 
-const TONES: Record<Tone, string> = {
-  brand: "bg-primary/10 text-primary",
-  progress: "bg-success/12 text-success-ink",
-  cheer: "bg-cheer/20 text-cheer-ink",
+/* ------------------------------------------------------------------------ */
+/* Hero: example challenge cards either side of the live demo                */
+/* ------------------------------------------------------------------------ */
+
+type Pastel = "lavender" | "amber" | "sky" | "mint";
+
+const PASTEL: Record<Pastel, string> = {
+  lavender: "bg-pastel-lavender",
+  amber: "bg-pastel-amber",
+  sky: "bg-pastel-sky",
+  mint: "bg-pastel-mint",
 };
 
-function IconTile({
-  icon: Icon,
-  tone,
+/** Decorative: other challenges someone might be running. Hidden from
+    assistive tech, which gets the live demo instead. */
+function ExampleCard({
+  title,
+  streak,
+  unit,
+  pastel,
   className,
 }: {
-  icon: LucideIcon;
-  tone: Tone;
+  title: string;
+  streak: number;
+  unit: string;
+  pastel: Pastel;
   className?: string;
 }) {
   return (
-    <span
+    <div
+      aria-hidden
       className={cn(
-        "flex size-11 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110",
-        TONES[tone],
+        "text-pastel-foreground shrink-0 flex-col justify-between rounded-[28px] p-5 text-left",
+        PASTEL[pastel],
         className,
       )}
     >
-      <Icon className="size-5" aria-hidden />
-    </span>
+      <p className="text-lg leading-tight tracking-[-0.02em]">{title}</p>
+      <div>
+        <p className="text-6xl leading-[0.9] tracking-[-0.05em]">
+          {streak}
+        </p>
+        <p className="mt-1 text-[13px] opacity-70">{unit}</p>
+        <div className="mt-3 grid grid-cols-7 gap-1">
+          {Array.from({ length: 7 }, (_, i) => (
+            <span
+              key={i}
+              className="bg-pastel-foreground/55 aspect-square rounded-[4px]"
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
-const steps: { icon: LucideIcon; tone: Tone; title: string; body: string }[] = [
-  {
-    icon: Target,
-    tone: "brand",
-    title: "Set a challenge",
-    body: "Pick the habit, how often, and how many days you'll go for.",
-  },
-  {
-    icon: HandCoins,
-    tone: "cheer",
-    title: "Put a stake on it",
-    body: "“Lunch on me if I bail.” A real cost makes today's excuse expensive.",
-  },
-  {
-    icon: Users,
-    tone: "brand",
-    title: "Invite a buddy",
-    body: "One link. They watch your progress live — no account needed.",
-  },
-  {
-    icon: Flame,
-    tone: "progress",
-    title: "Keep the chain alive",
-    body: "Check in daily, grow the streak, get cheered on when it counts.",
-  },
-];
+/* ------------------------------------------------------------------------ */
+/* How it works: one pastel card per step, each holding a real UI fragment  */
+/* ------------------------------------------------------------------------ */
 
-const principles: { icon: LucideIcon; tone: Tone; title: string; body: string }[] =
-  [
-    {
-      icon: Eye,
-      tone: "brand",
-      title: "Someone is watching",
-      body: "A habit nobody can see is easy to skip. When a friend can open a link and see whether you showed up, skipping stops being private.",
-    },
-    {
-      icon: HandCoins,
-      tone: "cheer",
-      title: "Something is at risk",
-      body: "We work harder to avoid losing than to gain. Naming a stake you'd rather not pay turns “I'll start Monday” into “I'm going today”.",
-    },
-    {
-      icon: Flame,
-      tone: "progress",
-      title: "The chain gets valuable",
-      body: "Every check-in makes the streak worth more. After twelve days you're not protecting a habit — you're protecting twelve days of work.",
-    },
-  ];
+function StepCard({
+  step,
+  title,
+  points,
+  pastel,
+  children,
+}: {
+  step: number;
+  title: string;
+  points: string[];
+  pastel: Pastel;
+  /** The UI fragment. Illustrative, so hidden from assistive tech; `points`
+      carries the meaning. */
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "text-pastel-foreground flex h-full flex-col overflow-hidden rounded-[32px] px-6 pt-7 sm:px-8 sm:pt-8 md:min-h-[25rem]",
+        PASTEL[pastel],
+      )}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <h3 className="text-3xl leading-none tracking-[-0.035em] sm:text-[2rem]">
+          {title}
+        </h3>
+        <span className="bg-background/55 shrink-0 rounded-full px-3 py-1.5 text-[13px] leading-none">
+          Step {step}
+        </span>
+      </div>
+      <ul className="border-pastel-foreground/20 mt-4 mb-8 flex flex-col gap-1 border-l pl-4 text-[15px] opacity-80">
+        {points.map((p) => (
+          <li key={p} className="text-pretty">
+            {p}
+          </li>
+        ))}
+      </ul>
+      <div
+        aria-hidden
+        className="bg-card text-card-foreground mt-auto rounded-t-2xl p-5 pb-7 shadow-[0_20px_40px_-20px_rgb(0_0_0/0.35)] sm:ml-10"
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
 
-/** Shared surface for every card-shaped block on the page. */
-const TILE =
-  "group bg-card ring-foreground/10 lift hover:ring-primary/30 flex h-full flex-col rounded-2xl ring-1 hover:shadow-lg";
+function FragmentLabel({ children }: { children: React.ReactNode }) {
+  return <p className="text-muted-foreground text-xs">{children}</p>;
+}
+
+/** Day 12 of 14: an early miss, then a run, with two days still to come. */
+const CARD_CHAIN = [
+  "kept", "missed", "kept", "kept", "kept", "kept", "kept",
+  "kept", "kept", "kept", "kept", "kept", "upcoming", "upcoming",
+] as const;
 
 export default function Home() {
-  // FAQ structured data — lets search engines and AI answer surfaces quote the
-  // real answers instead of guessing at them.
+  // FAQ structured data, so search engines and AI answer surfaces can quote
+  // the real answers instead of guessing at them.
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -135,407 +157,317 @@ export default function Home() {
         {/* ---------------------------------------------------------------- */}
         {/* Hero                                                             */}
         {/* ---------------------------------------------------------------- */}
-        <section className="relative overflow-hidden">
-          <div
-            className="text-foreground/[0.07] dot-grid pointer-events-none absolute inset-0 -z-10 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)]"
-            aria-hidden
-          />
-          <div className="mx-auto w-full max-w-6xl px-5 pt-14 pb-16 sm:px-8 sm:pt-20 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-16 lg:pt-24 lg:pb-28">
-            <div className="animate-in fade-in slide-in-from-bottom-4 flex flex-col items-start gap-6 duration-700">
-              <Badge variant="secondary" className="h-7 gap-1.5 rounded-full px-3">
-                <Sparkles className="size-3.5" aria-hidden />
-                Accountability, gamified
-              </Badge>
-
-              <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-                Build habits with a{" "}
-                {/* The gradient runs indigo → green: the commitment you make,
-                    ending in the thing you're after. */}
-                <span className="from-brand-from via-brand-to to-success-ink bg-gradient-to-r bg-clip-text text-transparent">
-                  buddy watching.
-                </span>
+        <section className="band-ink overflow-hidden">
+          <div className="mx-auto w-full max-w-6xl px-5 pt-16 text-center sm:px-8 sm:pt-24">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <h1 className="mx-auto max-w-[11ch] text-[clamp(2.75rem,8.5vw,6.5rem)] leading-[0.95] tracking-[-0.055em] text-balance">
+                Build habits with a buddy{" "}
+                <em className="text-ink-accent font-serif tracking-[-0.02em]">
+                  watching.
+                </em>
               </h1>
 
-              <p className="text-muted-foreground max-w-xl text-lg text-pretty sm:text-xl">
-                Set a daily challenge, put something on the line, and invite a
-                friend to hold you to it. Willpower is unreliable — being
-                watched isn&apos;t.
+              <p className="text-ink-muted mx-auto mt-6 max-w-xl text-lg text-pretty sm:text-xl">
+                Set a challenge, name what you lose if you skip, and send one
+                link to a friend. They see every day you log, and every day you
+                don&apos;t.
               </p>
 
-              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Button
                   size="xl"
-                  className="w-full shadow-md transition-transform hover:-translate-y-0.5 sm:w-auto"
+                  variant="inverse"
+                  className="w-full sm:w-auto"
                   asChild
                 >
                   <Link href="/signup">
                     Start a challenge
-                    <ArrowRight className="size-5 transition-transform duration-300 group-hover/button:translate-x-1" aria-hidden />
+                    <ArrowRight
+                      className="size-5 transition-transform duration-300 group-hover/button:translate-x-0.5"
+                      aria-hidden
+                    />
                   </Link>
                 </Button>
                 <Button
                   size="xl"
-                  variant="outline"
+                  variant="inverse-outline"
                   className="w-full sm:w-auto"
                   asChild
                 >
                   <a href="#how-it-works">See how it works</a>
                 </Button>
               </div>
-
-              <ul className="text-muted-foreground flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-                <li className="inline-flex items-center gap-1.5">
-                  <ShieldCheck className="text-success-ink size-4" aria-hidden />
-                  Free to use
-                </li>
-                <li className="inline-flex items-center gap-1.5">
-                  <Zap className="text-success-ink size-4" aria-hidden />
-                  Password or magic link
-                </li>
-                <li className="inline-flex items-center gap-1.5">
-                  <Users className="text-success-ink size-4" aria-hidden />
-                  Your buddy needs no account
-                </li>
-              </ul>
+              <p className="text-ink-subtle mt-4 text-sm">
+                Free. Your buddy just opens the link.
+              </p>
             </div>
 
-            <div className="animate-in fade-in slide-in-from-bottom-6 mt-16 flex flex-col gap-4 duration-1000 lg:mt-0">
-              <HeroPreview />
-              {/* The card is playable and nothing about a screenshot-shaped
-                  thing says so. */}
-              <p className="text-muted-foreground mt-4 text-center text-xs">
-                Go on — log the open day. It&apos;s the real thing.
-              </p>
+            {/* The live demo, flanked by other challenges someone might run.
+                The side cards sink below the band's edge, so the row reads as
+                a stack of cards rather than a grid. */}
+            <div className="animate-in fade-in slide-in-from-bottom-8 mt-14 flex items-end justify-center gap-4 pb-14 duration-1000 sm:mt-16 lg:gap-5">
+                <ExampleCard
+                  title="Meditate 10 minutes"
+                  streak={5}
+                  unit="day streak"
+                  pastel="sky"
+                  className="hidden h-60 w-44 translate-y-36 opacity-70 xl:flex"
+                />
+                <ExampleCard
+                  title="Run 5k on Saturdays"
+                  streak={3}
+                  unit="week streak"
+                  pastel="amber"
+                  className="hidden h-72 w-52 translate-y-24 lg:flex"
+                />
+              <div className="w-full max-w-sm shrink-0">
+                <HeroPreview />
+                <p className="text-ink-subtle mt-4 text-xs">
+                  Go on, log the open day. It&apos;s the real check-in.
+                </p>
+              </div>
+                <ExampleCard
+                  title="No phone after 10pm"
+                  streak={6}
+                  unit="day streak"
+                  pastel="mint"
+                  className="hidden h-72 w-52 translate-y-24 lg:flex"
+                />
+                <ExampleCard
+                  title="Write 300 words"
+                  streak={9}
+                  unit="day streak"
+                  pastel="lavender"
+                  className="hidden h-60 w-44 translate-y-36 opacity-70 xl:flex"
+                />
             </div>
           </div>
         </section>
 
         {/* ---------------------------------------------------------------- */}
-        {/* The problem                                                      */}
+        {/* The argument, at display size                                    */}
         {/* ---------------------------------------------------------------- */}
-        <section className="bg-muted/30 border-y">
-          <div className="mx-auto w-full max-w-6xl px-5 py-14 sm:px-8 sm:py-16">
-            <Reveal className="flex flex-col items-center gap-3 text-center">
-              <h2 className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
-                Habit apps let you quit quietly.
-              </h2>
-              <p className="text-muted-foreground max-w-2xl text-pretty">
-                You download one, you log three days, you miss a day, and
-                nothing happens. No one notices. Nothing is lost. That&apos;s
-                the whole problem — and it&apos;s the one thing Habitual fixes.
+        <section className="band-ink border-ink-line border-t">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-5 py-20 sm:px-8 sm:py-28">
+            <Reveal>
+              <p className="max-w-[22ch] text-[clamp(1.875rem,4.6vw,3.5rem)] leading-[1.06] tracking-[-0.035em] text-pretty">
+                Most habit apps let you quit quietly.{" "}
+                <span className="text-ink-subtle">
+                  You log three days, miss one, and nobody notices.
+                </span>
               </p>
             </Reveal>
-
-            <div className="mt-10 grid gap-4 sm:grid-cols-3">
-              {principles.map(({ icon, tone, title, body }, i) => (
-                <Reveal key={title} delay={i * 90}>
-                  <div className={cn(TILE, "gap-3 p-6")}>
-                    <IconTile icon={icon} tone={tone} />
-                    <h3 className="font-semibold">{title}</h3>
-                    <p className="text-muted-foreground text-sm text-pretty">
-                      {body}
-                    </p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
+            <Reveal>
+              <p className="max-w-[22ch] text-[clamp(1.875rem,4.6vw,3.5rem)] leading-[1.06] tracking-[-0.035em] text-pretty">
+                Habitual puts a friend on the other end of every streak,{" "}
+                <span className="text-ink-subtle">
+                  and something you&apos;d rather not lose on the line.
+                </span>
+              </p>
+            </Reveal>
           </div>
         </section>
 
         {/* ---------------------------------------------------------------- */}
         {/* How it works                                                     */}
         {/* ---------------------------------------------------------------- */}
-        <section id="how-it-works" className="scroll-mt-24">
-          <div className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-8 sm:py-24">
-            <Reveal className="flex flex-col items-center gap-3 text-center">
-              <p className="text-primary text-sm font-semibold tracking-wide uppercase">
+        <section id="how-it-works" className="scroll-mt-16">
+          <div className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
+            <Reveal className="text-center">
+              <h2 className="text-[clamp(2.5rem,6.5vw,4.5rem)] leading-none tracking-[-0.05em]">
                 How it works
-              </p>
-              <h2 className="text-3xl font-bold tracking-tight text-balance sm:text-4xl">
-                Four steps. About a minute.
               </h2>
-              <p className="text-muted-foreground max-w-2xl text-pretty">
-                From a vague intention to a live, watched challenge before your
-                coffee gets cold.
+              <p className="text-muted-foreground mt-4 text-lg text-pretty">
+                About a minute from an idea to a challenge someone is watching.
               </p>
             </Reveal>
 
-            <ol className="relative mt-12 grid gap-8 md:grid-cols-4 md:gap-6">
-              {/* Connector rail behind the numbered markers (desktop only). It
-                  runs through the same indigo → green the page ends on. */}
-              <span
-                className="from-primary/30 via-primary/25 to-success/40 absolute top-6 right-[12.5%] left-[12.5%] hidden h-px bg-gradient-to-r md:block"
-                aria-hidden
-              />
-              {steps.map(({ icon, tone, title, body }, i) => (
-                <Reveal
-                  as="li"
-                  key={title}
-                  delay={i * 90}
-                  className="group relative"
+            {/* `grid-cols-1` (minmax(0, 1fr)), not the implicit auto column: an auto
+                track grows to its widest unbreakable content, and the
+                invite link in step 3 would push every card off a phone. */}
+            <ol className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-2 lg:mt-16 lg:gap-6">
+              <Reveal as="li">
+                <StepCard
+                  step={1}
+                  title="Set the challenge"
+                  pastel="lavender"
+                  points={[
+                    "Pick the habit, how often and for how long.",
+                    "Every day, weekdays, one day a week, weekly, monthly, or a running total.",
+                  ]}
                 >
-                  <div className="flex gap-4 md:flex-col md:items-center md:text-center">
-                    <div className="relative flex flex-col items-center">
-                      <IconTile
-                        icon={icon}
-                        tone={tone}
-                        className="bg-card ring-foreground/10 size-12 shrink-0 rounded-2xl shadow-sm ring-1"
-                      />
-                      {/* Vertical rail for the stacked mobile layout */}
-                      {i < steps.length - 1 && (
-                        <span
-                          className="bg-border mt-2 w-px flex-1 md:hidden"
-                          aria-hidden
-                        />
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-1.5 pb-8 md:pb-0">
-                      <h3 className="font-semibold">
-                        <span className="text-muted-foreground tabular-nums">
-                          {i + 1}.
-                        </span>{" "}
-                        {title}
-                      </h3>
-                      <p className="text-muted-foreground text-sm text-pretty">
-                        {body}
-                      </p>
-                    </div>
+                  <FragmentLabel>What is your challenge?</FragmentLabel>
+                  <p className="border-input mt-2 rounded-xl border px-3.5 py-2.5 text-[15px]">
+                    Read 20 pages a day
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2 text-[13px]">
+                    <span className="bg-foreground text-background rounded-full px-3 py-1.5">
+                      Every day
+                    </span>
+                    {["Weekdays", "Weekly", "28 days"].map((o) => (
+                      <span
+                        key={o}
+                        className="border-input rounded-full border px-3 py-1.5"
+                      >
+                        {o}
+                      </span>
+                    ))}
                   </div>
-                </Reveal>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        {/* ---------------------------------------------------------------- */}
-        {/* Features — bento grid                                            */}
-        {/* ---------------------------------------------------------------- */}
-        <section id="features" className="bg-muted/30 scroll-mt-24 border-t">
-          <div className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-8 sm:py-24">
-            <Reveal className="flex flex-col items-center gap-3 text-center">
-              <p className="text-primary text-sm font-semibold tracking-wide uppercase">
-                What you get
-              </p>
-              <h2 className="text-3xl font-bold tracking-tight text-balance sm:text-4xl">
-                Everything that makes a streak hard to break.
-              </h2>
-            </Reveal>
-
-            <div className="mt-12 grid gap-4 md:grid-cols-3">
-              {/* Streak — the hero tile */}
-              <Reveal className="md:col-span-2">
-                <div
-                  className={cn(TILE, "justify-between gap-6 p-6 sm:p-8")}
-                >
-                  <div className="flex flex-col gap-2">
-                    <IconTile icon={Flame} tone="progress" />
-                    <h3 className="mt-2 text-xl font-semibold">
-                      A streak you can see
-                    </h3>
-                    <p className="text-muted-foreground text-pretty">
-                      Every check-in adds a link to the chain. Current streak,
-                      best streak, and how much of the plan you&apos;ve actually
-                      finished — no guessing how you&apos;re doing.
-                    </p>
-                  </div>
-                  <ChainDemo />
-                </div>
+                </StepCard>
               </Reveal>
 
-              {/* Stakes */}
-              <Reveal delay={90}>
-                <div className={cn(TILE, "gap-3 p-6 sm:p-8")}>
-                  <IconTile icon={HandCoins} tone="cheer" />
-                  <h3 className="mt-2 text-xl font-semibold">Real stakes</h3>
-                  <p className="text-muted-foreground text-pretty">
-                    Name what you lose if you bail. Your buddy sees it, which is
-                    what makes it stick.
+              <Reveal as="li" delay={80}>
+                <StepCard
+                  step={2}
+                  title="Name the stake"
+                  pastel="amber"
+                  points={[
+                    "Something small you'd rather not pay, like lunch or a week of dishes.",
+                    "Your buddy sees it from day one.",
+                  ]}
+                >
+                  <FragmentLabel>What&apos;s on the line?</FragmentLabel>
+                  <p className="mt-2 font-serif text-[1.75rem] leading-[1.15] italic">
+                    Lunch on me if I miss a day
                   </p>
-                  <div className="bg-cheer/15 ring-cheer/25 chip-arrive mt-auto flex items-start gap-2.5 rounded-xl px-4 py-3 ring-1">
-                    <HandCoins
-                      className="text-cheer-ink mt-0.5 size-4 shrink-0"
-                      aria-hidden
-                    />
-                    <p className="text-sm text-pretty">
-                      <span className="font-medium">On the line: </span>
-                      Lunch on me if I miss a day.
-                    </p>
-                  </div>
-                </div>
+                </StepCard>
               </Reveal>
 
-              {/* Buddy link */}
-              <Reveal delay={90}>
-                <div className={cn(TILE, "gap-3 p-6 sm:p-8")}>
-                  <IconTile icon={Link2} tone="brand" />
-                  <h3 className="mt-2 text-xl font-semibold">
-                    One link, zero friction
-                  </h3>
-                  <p className="text-muted-foreground text-pretty">
-                    Send a link or show the QR code. Your buddy watches live —
-                    no download, no account, no excuses.
-                  </p>
-                  <div className="bg-primary/10 ring-primary/20 chip-arrive mt-auto flex items-center gap-2.5 rounded-xl px-4 py-3 ring-1">
-                    <Link2 className="text-primary size-4 shrink-0" aria-hidden />
-                    <span className="truncate font-mono text-sm">
-                      habitual.app/j/7QK2M
+              <Reveal as="li">
+                <StepCard
+                  step={3}
+                  title="Send the link"
+                  pastel="sky"
+                  points={[
+                    "Your buddy opens it and watches your progress live, with no account.",
+                    "They sign in only to cheer, nudge or leave a note.",
+                  ]}
+                >
+                  <FragmentLabel>Invite your buddy</FragmentLabel>
+                  <div className="border-input mt-2 flex items-center gap-2 rounded-full border py-1.5 pr-1.5 pl-4 text-sm">
+                    <span className="text-muted-foreground min-w-0 flex-1 truncate">
+                      habitual-app-kappa.vercel.app/i/c2749bec
+                    </span>
+                    <span className="bg-foreground text-background rounded-full px-3.5 py-1.5 text-[13px]">
+                      Copy
                     </span>
                   </div>
-                </div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-[13px]">
+                    <span className="bg-pastel-amber text-pastel-foreground rounded-full px-3 py-1.5">
+                      Sam cheered you on
+                    </span>
+                    <span className="bg-pastel-amber text-pastel-foreground rounded-full px-3 py-1.5">
+                      Alex nudged you
+                    </span>
+                  </div>
+                </StepCard>
               </Reveal>
 
-              {/* Reactions */}
-              <Reveal delay={90}>
-                <div className={cn(TILE, "gap-3 p-6 sm:p-8")}>
-                  <IconTile icon={BellRing} tone="cheer" />
-                  <h3 className="mt-2 text-xl font-semibold text-balance">
-                    Cheers when you&apos;re winning, nudges when you&apos;re not
-                  </h3>
-                  <p className="text-muted-foreground text-pretty">
-                    Your buddy can cheer, nudge or leave a note in one tap.
-                    Encouragement lands the day it matters.
-                  </p>
-                  {/* The two notes drift apart a little on hover — a reaction
-                      wall that reads as alive rather than as a screenshot. */}
-                  <div className="mt-auto flex flex-col gap-2 pt-4">
-                    <div
-                      className="bg-cheer/15 chip-arrive flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-transform duration-300 group-hover:-translate-x-1"
-                      style={{ "--chip-delay": "2s" } as React.CSSProperties}
-                    >
-                      <span className="text-base" aria-hidden>
-                        🎉
-                      </span>
-                      <span className="text-pretty">
-                        <span className="font-medium">Sam</span>{" "}
-                        <span className="text-muted-foreground">cheered you</span>
-                      </span>
-                    </div>
-                    <div
-                      className="bg-cheer/15 chip-arrive flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-transform duration-300 group-hover:translate-x-1"
-                      style={{ "--chip-delay": "2.75s" } as React.CSSProperties}
-                    >
-                      <span className="text-base" aria-hidden>
-                        👋
-                      </span>
-                      <span className="text-pretty">
-                        <span className="font-medium">Alex</span>{" "}
-                        <span className="text-muted-foreground">
-                          nudged you — day 13?
-                        </span>
-                      </span>
-                    </div>
+              <Reveal as="li" delay={80}>
+                <StepCard
+                  step={4}
+                  title="Log each day"
+                  pastel="mint"
+                  points={[
+                    "Five seconds a day, confetti included.",
+                    "Go past the skips you allowed and the stake is due.",
+                  ]}
+                >
+                  <FragmentLabel>Read 20 pages a day · day 12 of 14</FragmentLabel>
+                  <div className="mt-3 grid grid-cols-14 gap-1">
+                    {CARD_CHAIN.map((state, i) => (
+                      <span
+                        key={i}
+                        className={cn(
+                          "aspect-square rounded-[4px]",
+                          state === "kept" && "bg-success",
+                          state === "missed" && "cell-missed",
+                          state === "upcoming" && "ring-border ring-1 ring-inset",
+                        )}
+                      />
+                    ))}
                   </div>
-                </div>
-              </Reveal>
-
-              {/* Daily check-in */}
-              <Reveal delay={90}>
-                <div className={cn(TILE, "gap-3 p-6 sm:p-8")}>
-                  <IconTile icon={CalendarCheck} tone="progress" />
-                  <h3 className="mt-2 text-xl font-semibold">
-                    A check-in worth showing up for
-                  </h3>
-                  <p className="text-muted-foreground text-pretty">
-                    Mark it done or log a number, add a note, and take the
-                    confetti. It&apos;s a five-second ritual by design.
+                  <p className="text-success-ink mt-3 text-sm font-medium">
+                    Day 12 logged. 20 pages read.
                   </p>
-                  <div className="bg-success/15 ring-success/25 chip-arrive mt-auto flex items-center gap-2.5 rounded-xl px-4 py-3 ring-1">
-                    <CheckCircle2
-                      className="text-success-ink size-4 shrink-0"
-                      aria-hidden
-                    />
-                    <p className="text-sm text-pretty">
-                      <span className="font-medium">Day 12 done. </span>
-                      <span className="text-muted-foreground">20 pages read.</span>
-                    </p>
-                  </div>
-                </div>
+                </StepCard>
               </Reveal>
-            </div>
+            </ol>
           </div>
         </section>
 
         {/* ---------------------------------------------------------------- */}
         {/* FAQ                                                              */}
         {/* ---------------------------------------------------------------- */}
-        <section id="faq" className="scroll-mt-24 border-t">
-          <div className="mx-auto w-full max-w-3xl px-5 py-16 sm:px-8 sm:py-24">
-            <Reveal className="flex flex-col items-center gap-3 text-center">
-              <p className="text-primary text-sm font-semibold tracking-wide uppercase">
-                FAQ
-              </p>
-              <h2 className="text-3xl font-bold tracking-tight text-balance sm:text-4xl">
-                Questions, answered.
+        <section id="faq" className="border-border scroll-mt-16 border-t">
+          <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-10 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[1fr_1.7fr] lg:gap-16">
+            <Reveal>
+              <h2 className="text-[clamp(2.25rem,5vw,3.5rem)] leading-none tracking-[-0.045em]">
+                Questions
               </h2>
+              <p className="text-muted-foreground mt-4 max-w-xs text-pretty">
+                The short version: your buddy needs nothing, and you need about
+                a minute.
+              </p>
             </Reveal>
-            <Reveal className="mt-10">
+            <Reveal>
               <Faq />
             </Reveal>
           </div>
         </section>
 
         {/* ---------------------------------------------------------------- */}
-        {/* Final CTA                                                        */}
+        {/* Closing                                                          */}
         {/* ---------------------------------------------------------------- */}
-        <section className="px-5 pb-20 sm:px-8">
-          <Reveal className="mx-auto w-full max-w-6xl">
-            <div className="from-brand-from to-brand-to relative overflow-hidden rounded-3xl bg-gradient-to-br px-6 py-14 text-center sm:px-12 sm:py-20">
-              <div
-                className="dot-grid pointer-events-none absolute inset-0 text-white/20"
-                aria-hidden
-              />
-              {/* A green wash in the corner the eye lands on last — the same
-                  "kept it" colour the whole page has been building toward. */}
-              <div
-                className="pointer-events-none absolute -right-24 -bottom-24 size-72 rounded-full bg-[color-mix(in_oklch,var(--success),transparent_65%)] blur-3xl"
-                aria-hidden
-              />
-              <div className="relative flex flex-col items-center gap-6">
-                <h2 className="max-w-2xl text-3xl font-bold tracking-tight text-balance text-white sm:text-4xl">
-                  What would you do differently if someone were watching?
-                </h2>
-                <p className="max-w-xl text-lg text-pretty text-white/80">
-                  Start a challenge, send one link, and find out. It takes about
-                  a minute.
-                </p>
-                <Button
-                  size="xl"
-                  className="bg-white text-neutral-900 shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-white/90 dark:bg-white dark:text-neutral-900 dark:hover:bg-white/90"
-                  asChild
-                >
-                  <Link href="/signup">
-                    Start your first streak
-                    <ArrowRight
-                      className="size-5 transition-transform duration-300 group-hover/button:translate-x-1"
-                      aria-hidden
-                    />
-                  </Link>
-                </Button>
-                <p className="text-sm text-white/70">
-                  Free · no card needed · your buddy needs no account
-                </p>
-              </div>
-            </div>
-          </Reveal>
+        <section className="band-ink">
+          <div className="mx-auto grid w-full max-w-6xl grid-cols-1 items-end gap-10 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[1fr_auto]">
+            <Reveal>
+              <h2 className="max-w-[14ch] text-[clamp(2.25rem,5.5vw,4rem)] leading-none tracking-[-0.045em] text-balance">
+                What would you do if someone were{" "}
+                <em className="text-ink-accent font-serif tracking-[-0.02em]">
+                  watching?
+                </em>
+              </h2>
+            </Reveal>
+            <Reveal className="flex flex-col items-start gap-3 lg:items-end">
+              <Button size="xl" variant="inverse" asChild>
+                <Link href="/signup">
+                  Start your first streak
+                  <ArrowRight
+                    className="size-5 transition-transform duration-300 group-hover/button:translate-x-0.5"
+                    aria-hidden
+                  />
+                </Link>
+              </Button>
+              <p className="text-ink-subtle text-sm">Free. No card needed.</p>
+            </Reveal>
+          </div>
         </section>
       </main>
 
-      <footer className="border-t">
-        <div className="text-muted-foreground mx-auto flex w-full max-w-6xl flex-col items-center gap-4 px-5 py-10 text-sm sm:flex-row sm:justify-between sm:px-8">
-          <div className="flex items-center gap-2">
-            <LogoGlyph className="text-primary h-4 w-auto shrink-0" />
-            <span>
-              Habitual — habits stick when someone&apos;s watching.
-            </span>
+      <footer className="band-ink border-ink-line border-t">
+        <div className="text-ink-subtle mx-auto flex w-full max-w-6xl flex-col items-center gap-4 px-5 py-8 text-sm sm:flex-row sm:justify-between sm:px-8">
+          <div className="text-ink-foreground flex items-center gap-2">
+            <LogoGlyph className="h-4 w-auto shrink-0" />
+            <span className="tracking-[-0.02em]">Habitual</span>
           </div>
-          <nav aria-label="Footer" className="flex items-center gap-5">
-            <a href="#how-it-works" className="hover:text-foreground rounded-sm transition-colors">
+          <nav aria-label="Footer" className="flex items-center gap-6">
+            <a
+              href="#how-it-works"
+              className="hover:text-ink-foreground rounded-sm transition-colors"
+            >
               How it works
             </a>
-            <a href="#faq" className="hover:text-foreground rounded-sm transition-colors">
+            <a
+              href="#faq"
+              className="hover:text-ink-foreground rounded-sm transition-colors"
+            >
               FAQ
             </a>
-            <Link href="/login" className="hover:text-foreground rounded-sm transition-colors">
+            <Link
+              href="/login"
+              className="hover:text-ink-foreground rounded-sm transition-colors"
+            >
               Sign in
             </Link>
           </nav>
