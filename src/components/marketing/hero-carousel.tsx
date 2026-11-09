@@ -156,6 +156,7 @@ export function HeroCarousel() {
   const [reduced, setReduced] = useState(true); // until we know, no tilt
   const [hidden, setHidden] = useState(false);
   const [manual, setManual] = useState(false);
+  const regionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -186,6 +187,12 @@ export function HeroCarousel() {
         setHovered(false);
       } else {
         setPhase(next.phase);
+        // The scripted check-in celebrates like a real one, but only while
+        // the hero is actually on screen: confetti raining over the FAQ
+        // because a card offscreen "logged" would be noise.
+        if (next.phase === 3 && onScreen(regionRef.current)) {
+          void celebrateCheckIn(CARDS[active].streak + 1);
+        }
       }
     }, next.at - atOf(phase));
     return () => window.clearTimeout(id);
@@ -210,6 +217,7 @@ export function HeroCarousel() {
 
   return (
     <div
+      ref={regionRef}
       role="region"
       aria-roledescription="carousel"
       aria-label="Example challenges"
@@ -561,6 +569,14 @@ function Front({
       />
     </div>
   );
+}
+
+/** At least half of `el` is inside the viewport. */
+function onScreen(el: HTMLElement | null): boolean {
+  if (!el) return false;
+  const r = el.getBoundingClientRect();
+  const visible = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
+  return visible >= r.height / 2;
 }
 
 /** Animate a number toward `value` over ~600ms. */
