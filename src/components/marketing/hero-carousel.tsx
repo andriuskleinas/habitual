@@ -12,13 +12,15 @@ import { cn } from "@/lib/utils";
  *
  * Whichever card is in the middle plays a short story about one thing the
  * product does (a pointer checks in, the day fills, the streak ticks over, a
- * buddy reacts) and then the table turns to the next. Hovering pauses it: the
- * middle card tilts toward the pointer, side cards lift and can be clicked to
- * the front, and the check-in button is the real one, confetti and all.
+ * buddy reacts) and then the table turns to the next. Hovering the middle card
+ * pauses it (so its check-in button, the real one, can be pressed) and tilts
+ * it toward the pointer; side cards lift on hover and come to the front on
+ * click, after which the table keeps turning from there.
  *
- * Motion is opt-out: nothing turns on its own for anyone who asked for reduced
- * motion, and a pause button stops it for everyone else (WCAG 2.2.2). Before
- * hydration the first card renders complete and still.
+ * It only stops for good when someone asks it to: the pause button (WCAG
+ * 2.2.2), or keyboard focus inside it. Mouse clicks on the arrows and dots
+ * don't count as focus, or one click would freeze it forever. With reduced
+ * motion it still advances, but the turn and the tilt are instant.
  *
  * Illustrative throughout: sample challenges, not an account.
  */
@@ -151,7 +153,7 @@ export function HeroCarousel() {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [userPaused, setUserPaused] = useState(false);
-  const [reduced, setReduced] = useState(true); // until we know, stay still
+  const [reduced, setReduced] = useState(true); // until we know, no tilt
   const [hidden, setHidden] = useState(false);
   const [manual, setManual] = useState(false);
 
@@ -168,7 +170,7 @@ export function HeroCarousel() {
     };
   }, []);
 
-  const paused = hovered || focused || userPaused || reduced || hidden;
+  const paused = hovered || focused || userPaused || hidden;
 
   // Schedule the next beat of the story from wherever it currently is, so a
   // pause in the middle resumes rather than restarts.
@@ -181,6 +183,7 @@ export function HeroCarousel() {
         setActive((a) => (a + 1) % n);
         setPhase(0);
         setManual(false);
+        setHovered(false);
       } else {
         setPhase(next.phase);
       }
@@ -192,6 +195,9 @@ export function HeroCarousel() {
     setActive(((i % n) + n) % n);
     setPhase(0);
     setManual(false);
+    // The card that was in the middle moves away under the pointer and never
+    // gets a mouseleave, so clear the hover pause here.
+    setHovered(false);
   }
 
   function logByHand() {
@@ -207,9 +213,11 @@ export function HeroCarousel() {
       role="region"
       aria-roledescription="carousel"
       aria-label="Example challenges"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={() => setFocused(true)}
+      // Keyboard focus only: a mouse click leaves focus on the arrow it hit,
+      // which would otherwise pause the table until the visitor clicks away.
+      onFocus={(e) => {
+        if ((e.target as HTMLElement).matches(":focus-visible")) setFocused(true);
+      }}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false);
       }}
@@ -230,6 +238,7 @@ export function HeroCarousel() {
               phase={o === 0 ? phase : 0}
               manual={o === 0 && manual}
               tilt={!reduced}
+              onHover={o === 0 ? setHovered : undefined}
               onBring={() => go(i)}
               onLog={logByHand}
               onAgain={() => {
@@ -273,8 +282,7 @@ export function HeroCarousel() {
         >
           <ChevronRight className="size-5" aria-hidden />
         </button>
-        {!reduced && (
-          <button
+        <button
             type="button"
             onClick={() => setUserPaused((p) => !p)}
             aria-pressed={userPaused}
@@ -283,7 +291,6 @@ export function HeroCarousel() {
           >
             {userPaused ? <Play className="size-4" aria-hidden /> : <Pause className="size-4" aria-hidden />}
           </button>
-        )}
       </div>
     </div>
   );
@@ -297,6 +304,7 @@ function TurntableCard({
   phase,
   manual,
   tilt,
+  onHover,
   onBring,
   onLog,
   onAgain,
@@ -306,6 +314,8 @@ function TurntableCard({
   phase: number;
   manual: boolean;
   tilt: boolean;
+  /** Only the middle card pauses the table while hovered. */
+  onHover?: (hovering: boolean) => void;
   onBring: () => void;
   onLog: () => void;
   onAgain: () => void;
@@ -328,6 +338,7 @@ function TurntableCard({
   function onLeave() {
     tiltRef.current?.style.setProperty("--ry", "0deg");
     tiltRef.current?.style.setProperty("--rx", "0deg");
+    onHover?.(false);
   }
 
   return (
@@ -342,6 +353,7 @@ function TurntableCard({
         abs === 2 && "max-lg:pointer-events-none",
       )}
       style={{ "--o": offset, "--abs": abs } as React.CSSProperties}
+      onMouseEnter={() => onHover?.(true)}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
     >
