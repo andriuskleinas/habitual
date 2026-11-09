@@ -68,11 +68,11 @@ export function SignupForm({ next }: { next: string }) {
   if (status === "sent") {
     return (
       <div className="flex flex-col items-center gap-4 text-center">
-        <span className="bg-success/10 text-success-ink flex size-14 items-center justify-center rounded-2xl">
+        <span className="bg-success/10 text-success-ink flex size-12 items-center justify-center rounded-full">
           <MailCheck className="size-7" aria-hidden />
         </span>
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-3xl leading-tight tracking-[-0.04em] text-balance">
             Confirm your email
           </h1>
           <p className="text-muted-foreground text-pretty">
@@ -94,7 +94,7 @@ export function SignupForm({ next }: { next: string }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-3xl leading-tight tracking-[-0.04em] text-balance">
           Create your account
         </h1>
         <p className="text-muted-foreground text-pretty">

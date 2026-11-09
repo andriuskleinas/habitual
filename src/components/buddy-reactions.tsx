@@ -69,7 +69,7 @@ export function BuddyReactions({
   if (sent) {
     return (
       <div className="flex flex-col items-center gap-3 py-2 text-center">
-        <span className="bg-success/10 text-success-ink flex size-12 items-center justify-center rounded-2xl">
+        <span className="bg-success/10 text-success-ink flex size-12 items-center justify-center rounded-full">
           <Check className="size-6" aria-hidden />
         </span>
         <div className="flex flex-col gap-1">
@@ -98,7 +98,7 @@ export function BuddyReactions({
               type="button"
               size="lg"
               variant="outline"
-              className="h-auto flex-col gap-1 py-3"
+              className="h-auto flex-col gap-1 rounded-2xl py-3"
               onClick={() => setNoteOpen((v) => !v)}
               aria-expanded={noteOpen}
             >
@@ -155,7 +155,7 @@ function ReactionButton({
       value={type}
       size="lg"
       variant="outline"
-      className="h-auto flex-col gap-1 py-3"
+      className="h-auto flex-col gap-1 rounded-2xl py-3"
       disabled={pending}
     >
       {pending ? (
@@ -209,7 +209,7 @@ export function CheerPrompt({
             key={c.type}
             size="lg"
             variant="outline"
-            className="h-auto flex-col gap-1 py-3"
+            className="h-auto flex-col gap-1 rounded-2xl py-3"
             asChild
           >
             <Link

@@ -48,34 +48,31 @@ export function TodayDone({
   }, [challengeId, date, streak]);
 
   return (
-    <div className="ring-success/25 bg-success/[0.07] flex flex-col items-center gap-3 rounded-2xl px-5 py-7 text-center">
-      <span className="bg-success/15 text-success-ink flex size-14 items-center justify-center rounded-2xl">
-        <CheckCircle2 className="size-7" aria-hidden />
-      </span>
-
-      <div className="flex flex-col gap-1">
-        <p className="text-lg font-semibold">Today&apos;s done</p>
-        <p className="text-muted-foreground text-sm text-pretty">
-          {streak > 0
-            ? `That's ${streak} ${streakNoun} in a row. Don't break it.`
-            : "First one in the books."}
-        </p>
-      </div>
+    <div className="bg-muted/60 flex flex-col gap-3 rounded-3xl px-6 py-6">
+      <p className="text-success-ink flex items-center gap-2 text-2xl tracking-[-0.03em]">
+        <CheckCircle2 className="size-6 shrink-0" aria-hidden />
+        Today&apos;s done
+      </p>
+      <p className="text-muted-foreground text-pretty">
+        {streak > 0
+          ? `That's ${streak} ${streakNoun} in a row. Don't break it.`
+          : "First one in the books."}
+      </p>
 
       {showValue && (
-        <p className="text-foreground text-sm font-medium tabular-nums">
+        <p className="text-sm tabular-nums">
           Logged {value.toLocaleString("en-US")}
           {unit ? ` ${unit}` : ""}
         </p>
       )}
 
       {note && (
-        <p className="text-muted-foreground max-w-sm text-sm text-pretty italic">
-          &ldquo;{note}&rdquo;
+        <p className="text-muted-foreground font-serif text-lg text-pretty italic">
+          {note}
         </p>
       )}
 
-      <p className="text-muted-foreground mt-1 inline-flex items-center gap-1.5 text-xs">
+      <p className="text-muted-foreground inline-flex items-center gap-1.5 text-sm">
         <Clock className="size-3.5" aria-hidden />
         {nextDue ? `Back again ${nextDue}` : "That was the last one"}
       </p>

@@ -58,11 +58,11 @@ export default async function AccountPage() {
         </Link>
 
         <header className="mt-6 flex items-center gap-4">
-          <span className="from-brand-from to-brand-to text-primary-foreground flex size-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-xl font-semibold shadow-sm">
+          <span className="bg-pastel-lavender text-pastel-foreground flex size-16 shrink-0 items-center justify-center rounded-full text-xl font-medium">
             {initials(names)}
           </span>
           <div className="flex min-w-0 flex-col">
-            <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">
+            <h1 className="truncate text-[clamp(2.25rem,5vw,3.25rem)] leading-none tracking-[-0.045em] text-balance">
               {displayName(names)}
             </h1>
             <p className="text-muted-foreground truncate text-sm">
@@ -148,7 +148,7 @@ function Section({
           {description}
         </p>
       </div>
-      <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1 sm:p-6">
+      <div className="bg-card border-border rounded-3xl border p-5 sm:p-7">
         {children}
       </div>
     </section>

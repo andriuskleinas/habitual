@@ -63,22 +63,13 @@ export const LOGO_PATH_SMALL =
   "M37 42.5a13 13 0 1 0 26 0a13 13 0 1 0-26 0Z";
 
 /**
- * Brand gradient stops as hex. `globals.css` is the source of truth, but SVG
- * files and the OG renderer can't read a custom property — these are
- * `--brand-from` / `--brand-to` converted from oklch. Keep them in step.
- *
- * `BRAND_DEEP` has no token behind it: it is `--brand-from` taken darker along
- * the same hue (268°), and exists only to give the share cards a corner to
- * start from.
+ * The logo's own colours, as hex for the places that can't read a custom
+ * property (the static favicon, the iOS icon, the OG renderer). The mark is
+ * monochrome: a white glyph on `--ink`, or the reverse on the ink band.
+ * `INK` is `--ink` (oklch 0.16 0.02 268) converted; keep them in step.
  */
-export const BRAND_DEEP = "#22357A";
-export const BRAND_FROM = "#344EAD";
-export const BRAND_TO = "#0486D3";
+export const INK = "#0A0D16";
+export const INK_FOREGROUND = "#FCFCFC";
 
-/**
- * The share-card background. Both OG routes used to carry their own copy of
- * this string, and both had drifted off the tokens — the end stop sat at hue
- * 255° against `--brand-to`'s 245°, so share cards ended in a different blue
- * from the app. One constant, so they can't drift apart again.
- */
-export const BRAND_GRADIENT = `linear-gradient(135deg, ${BRAND_DEEP} 0%, ${BRAND_FROM} 55%, ${BRAND_TO} 100%)`;
+/** `--success` as hex, for the share cards' chain (kept days are green). */
+export const SUCCESS = "#2FA76A";

@@ -35,11 +35,11 @@ export function ForgotPasswordForm() {
   if (status === "sent") {
     return (
       <div className="flex flex-col items-center gap-4 text-center">
-        <span className="bg-success/10 text-success-ink flex size-14 items-center justify-center rounded-2xl">
+        <span className="bg-success/10 text-success-ink flex size-12 items-center justify-center rounded-full">
           <MailCheck className="size-7" aria-hidden />
         </span>
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-2xl font-bold tracking-tight">Check your email</h1>
+          <h1 className="text-3xl leading-tight tracking-[-0.04em] text-balance">Check your email</h1>
           {/* Deliberately does not confirm whether the address exists. */}
           <p className="text-muted-foreground text-pretty">
             If there&apos;s an account for{" "}
@@ -60,7 +60,7 @@ export function ForgotPasswordForm() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Reset your password</h1>
+        <h1 className="text-3xl leading-tight tracking-[-0.04em] text-balance">Reset your password</h1>
         <p className="text-muted-foreground text-pretty">
           Enter your email and we&apos;ll send a link to set a new one.
         </p>

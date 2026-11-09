@@ -1,21 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import {
-  ArrowLeft,
-  CalendarDays,
-  CheckCircle2,
-  Flame,
-  HandCoins,
-  HeartCrack,
-  LifeBuoy,
-  PartyPopper,
-  Trophy,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   cadenceLabel,
   describeAllowance,
+  diffDays,
   evaluateChallenge,
   formatCount,
   formatDay,
@@ -29,6 +20,7 @@ import { CheckInForm } from "@/components/check-in-form";
 import { TodayDone } from "@/components/today-done";
 import { ShareInvite } from "@/components/share-invite";
 import { ReactionsFeed, type ReactionItem } from "@/components/reactions-feed";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Challenge" };
 
@@ -112,13 +104,18 @@ export default async function ChallengeDetailPage({
   // The next slot that opens after today — what the "done" card points at.
   const nextPeriod = periods.find((p) => p.start > today) ?? null;
 
+  const dayOf =
+    ev.status === "active" && challenge.end_date
+      ? `day ${diffDays(challenge.start_date, today) + 1} of ${diffDays(challenge.start_date, challenge.end_date) + 1}`
+      : null;
+
   return (
     <>
       <AppHeader profile={profile ?? { email: user.email }} />
 
       <main
         id="main"
-        className="mx-auto w-full max-w-5xl flex-1 px-5 py-6 sm:px-8 sm:py-10"
+        className="mx-auto w-full max-w-5xl flex-1 px-5 py-8 sm:px-8 sm:py-12"
       >
         <Link
           href="/dashboard"
@@ -128,195 +125,156 @@ export default async function ChallengeDetailPage({
           Dashboard
         </Link>
 
-        <div className="mt-6 flex flex-col gap-2">
-          <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-            <CalendarDays className="size-3.5" aria-hidden />
-            <span>
-              {cadenceLabel(challenge.cadence, challenge.cadence_weekday)} ·{" "}
-              {formatDay(challenge.start_date)}
-              {challenge.end_date ? ` – ${formatDay(challenge.end_date)}` : ""}
-            </span>
+        <header className="mt-8">
+          <p className="text-muted-foreground text-sm">
+            {[
+              cadenceLabel(challenge.cadence, challenge.cadence_weekday),
+              `${formatDay(challenge.start_date)}${challenge.end_date ? ` – ${formatDay(challenge.end_date)}` : ""}`,
+              dayOf,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
-          <h1 className="text-2xl font-bold tracking-tight text-balance break-all sm:text-3xl">
+          <h1 className="mt-3 text-[clamp(2.25rem,5.5vw,4rem)] leading-[0.98] tracking-[-0.05em] text-balance break-words">
             {challenge.title}
           </h1>
-        </div>
-
-        {/* The verdict, once there is one. */}
-        {ev.status === "failed" && (
-          <div className="text-destructive ring-destructive/25 bg-destructive/[0.06] mt-5 flex items-start gap-2.5 rounded-xl px-4 py-3">
-            <HeartCrack className="mt-0.5 size-4 shrink-0" aria-hidden />
-            <p className="text-sm text-pretty">
-              <span className="font-semibold">Challenge failed. </span>
-              {ev.failReason === "in-a-row"
-                ? `You missed ${ev.worstMissRun} ${
-                    ev.worstMissRun === 1 ? noun.one : noun.many
-                  } back to back.`
-                : ev.failReason === "total"
-                  ? `Time ran out ${formatCount(
-                      ev.totalRemaining ?? 0,
-                      challenge.target_unit,
-                    )} short of ${formatCount(ev.totalTarget ?? 0)}.`
-                  : `You used ${ev.missedPeriods} skips and only had ${ev.skipsAllowed}.`}{" "}
-              {challenge.stake_text
-                ? "Time to pay up — then start a fresh one."
-                : "Start a fresh one; the streak was real while it lasted."}
-            </p>
-          </div>
-        )}
-        {ev.status === "won" && (
-          <div className="text-success-ink ring-success/25 bg-success/[0.06] mt-5 flex items-start gap-2.5 rounded-xl px-4 py-3">
-            <PartyPopper className="mt-0.5 size-4 shrink-0" aria-hidden />
-            <p className="text-sm text-pretty">
-              <span className="font-semibold">You made it. </span>
-              {ev.mode === "total"
-                ? `${formatCount(ev.totalLogged, challenge.target_unit)} logged — you cleared ${formatCount(ev.totalTarget ?? 0)}.`
-                : `${ev.donePeriods} of ${ev.totalPeriods} check-ins, inside the rules you set.`}{" "}
-              That&apos;s the whole game.
-            </p>
-          </div>
-        )}
-        {ev.status === "upcoming" && (
-          <div className="text-muted-foreground ring-foreground/10 mt-5 flex items-start gap-2.5 rounded-xl px-4 py-3 ring-1">
-            <CalendarDays className="mt-0.5 size-4 shrink-0" aria-hidden />
-            <p className="text-sm text-pretty">
-              Kicks off {formatDay(challenge.start_date, { weekday: true })}.
-              Send your buddy the link in the meantime.
-            </p>
-          </div>
-        )}
+        </header>
 
         {/* The stake is the reason any of this works, so it gets the loudest
-            slot on the page — full width, directly under the title, above the
-            fold on a phone. It used to sit in the sidebar, below the QR code. */}
+            slot on the page: full width, directly under the title, above the
+            fold on a phone. Set as a quote, because it's a promise in the
+            owner's own words. */}
         {challenge.stake_text && (
-          <section aria-label="What's on the line" className="mt-6">
-            {/* Amber, the reminder colour: the stake is the thing tapping you
-                on the shoulder, not part of the app's furniture. */}
-            <div className="ring-cheer/40 from-cheer/20 via-cheer/[0.08] flex items-start gap-3.5 rounded-2xl bg-gradient-to-r to-transparent px-4 py-4 ring-1 sm:px-5">
-              <span className="bg-cheer/25 text-cheer-ink flex size-11 shrink-0 items-center justify-center rounded-xl">
-                <HandCoins className="size-5" aria-hidden />
-              </span>
-              <div className="flex min-w-0 flex-col gap-0.5">
-                <p className="text-cheer-ink text-[0.7rem] font-semibold tracking-widest uppercase">
-                  On the line
-                </p>
-                <p className="text-base font-semibold text-pretty break-all sm:text-lg">
-                  {challenge.stake_text}
-                </p>
-              </div>
-            </div>
+          <section
+            aria-label="What's on the line"
+            className="border-border mt-8 grid gap-2 border-y py-5 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-baseline sm:gap-6"
+          >
+            <p className="text-cheer-ink text-xs font-medium tracking-[0.1em] uppercase">
+              On the line
+            </p>
+            <p className="font-serif text-[clamp(1.5rem,3.2vw,2.125rem)] leading-[1.1] text-pretty break-words italic">
+              {challenge.stake_text}
+            </p>
           </section>
         )}
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+        {/* The verdict, once there is one. */}
+        {ev.status === "failed" && (
+          <Notice tone="failed" title="Challenge failed.">
+            {ev.failReason === "in-a-row"
+              ? `You missed ${ev.worstMissRun} ${
+                  ev.worstMissRun === 1 ? noun.one : noun.many
+                } back to back.`
+              : ev.failReason === "total"
+                ? `Time ran out ${formatCount(
+                    ev.totalRemaining ?? 0,
+                    challenge.target_unit,
+                  )} short of ${formatCount(ev.totalTarget ?? 0)}.`
+                : `You used ${ev.missedPeriods} skips and had ${ev.skipsAllowed}.`}{" "}
+            {challenge.stake_text
+              ? "Time to pay up, then start a fresh one."
+              : "Start a fresh one. The streak was real while it lasted."}
+          </Notice>
+        )}
+        {ev.status === "won" && (
+          <Notice tone="won" title="You made it.">
+            {ev.mode === "total"
+              ? `${formatCount(ev.totalLogged, challenge.target_unit)} logged, past your ${formatCount(ev.totalTarget ?? 0)}.`
+              : `${ev.donePeriods} of ${ev.totalPeriods} check-ins, inside the rules you set.`}
+          </Notice>
+        )}
+        {ev.status === "upcoming" && (
+          <Notice tone="neutral" title={`Starts ${formatDay(challenge.start_date, { weekday: true })}.`}>
+            Send your buddy the link in the meantime.
+          </Notice>
+        )}
+
+        <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-12">
           {/* ---------------- Main column ---------------- */}
-          <div className="flex flex-col gap-8">
-            {/* Streak hero — the payoff number */}
-            <section aria-label="Progress" className="flex flex-col gap-3">
-              <div className="ring-success/20 from-success/12 via-success/5 relative overflow-hidden rounded-2xl bg-gradient-to-br to-transparent px-5 py-5 ring-1">
-                <div className="flex items-center gap-4">
-                  <span className="bg-success/15 text-success-ink flex size-14 shrink-0 items-center justify-center rounded-2xl">
-                    <Flame className="size-7" aria-hidden />
+          <div className="flex min-w-0 flex-col gap-10">
+            <section aria-label="Progress" className="flex flex-col gap-8">
+              {/* Three numbers in a row, the streak loudest and green: it's the
+                  one you're protecting. */}
+              <div className="grid grid-cols-3">
+                <Figure
+                  label="Current streak"
+                  value={ev.streak}
+                  unit={noun.one}
+                  tone="kept"
+                />
+                <Figure
+                  label="Best"
+                  value={ev.bestStreak}
+                  unit={noun.one}
+                  className="border-border border-l pl-4 sm:pl-6"
+                />
+                <div className="border-border flex min-w-0 flex-col gap-2 border-l pl-4 sm:pl-6">
+                  <span className="text-muted-foreground text-[13px]">
+                    {ev.mode === "total" ? "Total" : "Progress"}
                   </span>
-                  <div className="flex flex-col">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-success-ink text-4xl leading-none font-bold tabular-nums">
-                        {ev.streak}
-                      </span>
-                      <span className="text-muted-foreground text-sm">
-                        {ev.streak === 1 ? noun.one : noun.many}
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      current streak
-                      {ev.bestStreak > 0 ? ` · best ${ev.bestStreak}` : ""}
-                    </p>
-                  </div>
-                  {todayRow && (
-                    <span className="text-success-ink ring-success/20 bg-background/70 ml-auto inline-flex items-center gap-1 self-start rounded-full px-2.5 py-1 text-xs font-medium ring-1">
-                      <CheckCircle2 className="size-3.5" aria-hidden />
-                      Today
+                  <span className="text-4xl leading-none tracking-[-0.045em] tabular-nums sm:text-6xl">
+                    {ev.percent ?? 0}
+                    <span className="text-muted-foreground ml-1 text-sm tracking-normal">
+                      %
                     </span>
+                  </span>
+                  {ev.percent !== null && (
+                    <div
+                      className="bg-muted mt-1 h-1.5 w-full overflow-hidden rounded-full"
+                      role="progressbar"
+                      aria-valuenow={ev.percent}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label="Challenge completion"
+                    >
+                      <div
+                        className="bg-success h-full rounded-full"
+                        style={{ width: `${ev.percent}%` }}
+                      />
+                    </div>
                   )}
                 </div>
               </div>
 
-              {ev.percent !== null && (
-                <div className="ring-foreground/10 flex flex-col gap-2.5 rounded-2xl px-5 py-4 ring-1">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-1.5">
-                      <Trophy className="text-success-ink size-4" aria-hidden />
-                      <span className="text-sm font-semibold tabular-nums">
-                        {ev.mode === "total"
-                          ? `${formatCount(ev.totalLogged, challenge.target_unit)} of ${formatCount(ev.totalTarget ?? 0)}`
-                          : `${ev.percent}% complete`}
+              <p className="text-muted-foreground -mt-2 text-sm text-pretty">
+                {ev.mode === "total"
+                  ? `${formatCount(ev.totalLogged, challenge.target_unit)} of ${formatCount(ev.totalTarget ?? 0)}`
+                  : ev.totalPeriods !== null
+                    ? `${ev.donePeriods} of ${ev.totalPeriods} check-ins`
+                    : `${ev.donePeriods} check-ins`}
+                {ev.daysRemaining !== null && ev.status === "active"
+                  ? ` · ${ev.daysRemaining} day${ev.daysRemaining === 1 ? "" : "s"} left`
+                  : ""}
+                {/* Pace is the number that matters on a compounding goal: a
+                    skipped day is fine as long as the total keeps up. */}
+                {ev.pace !== null && ev.status === "active" && (
+                  <>
+                    {" · "}
+                    {ev.pace >= 0 ? (
+                      <span className="text-success-ink font-medium">
+                        {formatCount(ev.pace, challenge.target_unit)} ahead of pace
                       </span>
-                    </span>
-                    <span className="text-muted-foreground text-xs tabular-nums">
-                      {ev.mode === "total"
-                        ? `${ev.percent}%`
-                        : `${ev.donePeriods}/${ev.totalPeriods} check-ins`}
-                      {ev.daysRemaining !== null
-                        ? ` · ${ev.daysRemaining} days left`
-                        : ""}
-                    </span>
-                  </div>
-                  <div
-                    className="bg-muted h-2.5 w-full overflow-hidden rounded-full"
-                    role="progressbar"
-                    aria-valuenow={ev.percent}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label="Challenge completion"
-                  >
-                    <div
-                      className="bg-success h-full rounded-full transition-all duration-700"
-                      style={{ width: `${ev.percent}%` }}
-                    />
-                  </div>
-                  {/* Pace is the number that matters on a compounding goal —
-                      a skipped day is fine as long as the total keeps up. */}
-                  {ev.pace !== null && ev.status === "active" && (
-                    <p className="text-xs">
-                      {ev.pace >= 0 ? (
-                        <span className="text-success-ink font-medium">
-                          {formatCount(ev.pace, challenge.target_unit)} ahead of
-                          pace
-                        </span>
-                      ) : (
-                        <span className="text-warning-ink font-medium">
-                          {formatCount(-ev.pace, challenge.target_unit)} behind
-                          pace
-                        </span>
-                      )}
-                      {ev.perCheckInToFinish !== null && (
-                        <span className="text-muted-foreground">
-                          {" "}
-                          ·{" "}
-                          {formatCount(
-                            ev.perCheckInToFinish,
-                            challenge.target_unit,
-                          )}{" "}
-                          per check-in to finish
-                        </span>
-                      )}
-                    </p>
-                  )}
-                </div>
-              )}
+                    ) : (
+                      <span className="text-warning-ink font-medium">
+                        {formatCount(-ev.pace, challenge.target_unit)} behind pace
+                      </span>
+                    )}
+                    {ev.perCheckInToFinish !== null &&
+                      ` · ${formatCount(ev.perCheckInToFinish, challenge.target_unit)} per check-in to finish`}
+                  </>
+                )}
+              </p>
 
-              {/* Don't-break-the-chain grid over every scheduled check-in */}
               {periods.length > 0 && (
-                <ChainGrid periods={periods} done={doneSet} today={today} />
+                <ChainGrid periods={periods} done={doneSet} today={today} legend />
               )}
             </section>
 
             {/* Today's check-in (owner only). One per day: once it's logged the
                 form is gone for good, replaced by the receipt. */}
             {isOwner && ev.status === "active" ? (
-              <section className="flex flex-col gap-3">
-                <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
+              <section className="flex flex-col gap-4">
+                <h2 className="text-xl tracking-[-0.025em]">
                   {todayRow ? "Today" : "Log today"}
                 </h2>
                 {todayRow ? (
@@ -336,7 +294,7 @@ export default async function ChallengeDetailPage({
                     }
                   />
                 ) : (
-                  <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
+                  <div className="bg-muted/60 rounded-3xl p-5 sm:p-6">
                     <CheckInForm
                       challengeId={challenge.id}
                       dailyTarget={challenge.daily_target}
@@ -349,58 +307,52 @@ export default async function ChallengeDetailPage({
                 )}
               </section>
             ) : isOwner ? null : (
-              <section>
-                <p className="text-muted-foreground text-sm text-pretty">
-                  You&apos;re a buddy on this challenge. Open it from{" "}
-                  <Link href="/dashboard" className="text-foreground underline">
-                    your dashboard
-                  </Link>{" "}
-                  to cheer them on.
-                </p>
-              </section>
+              <p className="text-muted-foreground text-sm text-pretty">
+                You&apos;re a buddy on this challenge. Open it from{" "}
+                <Link href="/dashboard" className="text-foreground underline">
+                  your dashboard
+                </Link>{" "}
+                to cheer them on.
+              </p>
             )}
 
-            {/* Recent activity */}
             {rows.length > 0 && (
               <section className="flex flex-col gap-3">
-                <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
-                  Recent
-                </h2>
-                <ul className="flex flex-col gap-2">
+                <h2 className="text-xl tracking-[-0.025em]">Recent</h2>
+                <ul className="border-border divide-border divide-y border-y">
                   {rows.slice(0, 10).map((r) => (
                     <li
                       key={r.id}
-                      className="ring-foreground/10 flex items-start gap-3 rounded-lg px-3 py-2 ring-1"
+                      className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-4 py-3 text-sm"
                     >
-                      <span className="bg-success/12 text-success-ink flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold">
-                        {formatDay(r.date)}
+                      <span className="text-muted-foreground tabular-nums">
+                        {formatDay(r.date, { weekday: true })}
                       </span>
-                      <div className="flex min-w-0 flex-col">
+                      <span className="min-w-0">
                         {ev.mode === "each" ? (
-                          <span className="text-sm font-medium tabular-nums">
-                            {r.value}{" "}
-                            <span className="text-muted-foreground font-normal">
-                              / {challenge.daily_target}
+                          <span className="tabular-nums">
+                            {r.value}
+                            <span className="text-muted-foreground">
+                              {" "}
+                              of {challenge.daily_target}
                               {challenge.target_unit
                                 ? ` ${challenge.target_unit}`
                                 : ""}
                             </span>
                           </span>
                         ) : ev.mode === "total" ? (
-                          <span className="text-sm font-medium tabular-nums">
+                          <span className="tabular-nums">
                             +{formatCount(r.value, challenge.target_unit)}
                           </span>
-                        ) : null}
-                        {r.note ? (
-                          <span className="text-muted-foreground text-sm text-pretty break-all">
+                        ) : (
+                          <span className="text-success-ink">Kept</span>
+                        )}
+                        {r.note && (
+                          <span className="text-muted-foreground mt-0.5 block text-pretty break-words">
                             {r.note}
                           </span>
-                        ) : (
-                          ev.mode === "tick" && (
-                            <span className="text-sm">Done ✓</span>
-                          )
                         )}
-                      </div>
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -409,7 +361,7 @@ export default async function ChallengeDetailPage({
           </div>
 
           {/* ---------------- Sidebar ---------------- */}
-          <aside className="flex flex-col gap-6">
+          <aside className="flex min-w-0 flex-col gap-5">
             {isOwner && inviteToken && (
               <ShareInvite
                 path={`/i/${inviteToken}`}
@@ -419,9 +371,9 @@ export default async function ChallengeDetailPage({
             )}
 
             {reactions.length > 0 && (
-              <section className="flex flex-col gap-3">
-                <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
-                  {isOwner ? "Your buddies say" : "Reactions"}
+              <section className="border-border bg-card flex flex-col gap-4 rounded-3xl border p-5">
+                <h2 className="text-lg tracking-[-0.02em]">
+                  {isOwner ? "From your buddies" : "Reactions"}
                 </h2>
                 <ReactionsFeed reactions={reactions} />
               </section>
@@ -431,38 +383,98 @@ export default async function ChallengeDetailPage({
                 purpose: it's reference material, and dressing a skip budget up
                 as a headline just advertises the way out. */}
             {(ev.skipsAllowed !== null || ev.maxMissesInRow !== null) && (
-              <p className="text-muted-foreground flex items-start gap-2 text-xs text-pretty">
-                <LifeBuoy className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                <span>
-                  <span className="text-foreground/80 font-medium">
-                    Wiggle room:
-                  </span>{" "}
-                  {ev.skipsLeft !== null && (
-                    <>
-                      <span
-                        className={
-                          ev.skipsLeft === 0
-                            ? "text-warning-ink font-semibold tabular-nums"
-                            : "font-semibold tabular-nums"
-                        }
-                      >
-                        {ev.skipsLeft} left
-                      </span>
-                      {" · "}
-                    </>
-                  )}
-                  {describeAllowance({
-                    skipsAllowed: ev.skipsAllowed,
-                    maxMissesInRow: ev.maxMissesInRow,
-                    cadence: challenge.cadence,
-                  })}{" "}
-                  {ev.missedPeriods > 0 && `Missed ${ev.missedPeriods} so far.`}
-                </span>
+              <p className="text-muted-foreground px-1 text-[13px] text-pretty">
+                <span className="text-foreground/80 font-medium">Wiggle room:</span>{" "}
+                {ev.skipsLeft !== null && (
+                  <>
+                    <span
+                      className={
+                        ev.skipsLeft === 0
+                          ? "text-warning-ink font-medium tabular-nums"
+                          : "tabular-nums"
+                      }
+                    >
+                      {ev.skipsLeft} left
+                    </span>
+                    {" · "}
+                  </>
+                )}
+                {describeAllowance({
+                  skipsAllowed: ev.skipsAllowed,
+                  maxMissesInRow: ev.maxMissesInRow,
+                  cadence: challenge.cadence,
+                })}{" "}
+                {ev.missedPeriods > 0 && `Missed ${ev.missedPeriods} so far.`}
               </p>
             )}
           </aside>
         </div>
       </main>
     </>
+  );
+}
+
+/** A big number with its label above and unit beside it. */
+function Figure({
+  label,
+  value,
+  unit,
+  tone,
+  className,
+}: {
+  label: string;
+  value: number;
+  unit: string;
+  tone?: "kept";
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex min-w-0 flex-col gap-2", className)}>
+      <span className="text-muted-foreground text-[13px]">{label}</span>
+      <span
+        className={cn(
+          "text-4xl leading-none tracking-[-0.045em] tabular-nums sm:text-6xl",
+          tone === "kept" && "text-success-ink",
+        )}
+      >
+        {value}
+        <span className="text-muted-foreground ml-1.5 text-sm tracking-normal">
+          {unit}
+          {value === 1 ? "" : "s"}
+        </span>
+      </span>
+    </div>
+  );
+}
+
+/** The verdict line: won, failed or not yet started. Text only, no box. */
+function Notice({
+  tone,
+  title,
+  children,
+}: {
+  tone: "won" | "failed" | "neutral";
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <p
+      className={cn(
+        "bg-muted/60 mt-6 rounded-2xl px-5 py-4 text-pretty",
+        tone === "failed" && "text-destructive",
+      )}
+    >
+      <span
+        className={cn(
+          "font-medium",
+          tone === "won" && "text-success-ink",
+        )}
+      >
+        {title}
+      </span>{" "}
+      <span className={tone === "failed" ? "" : "text-muted-foreground"}>
+        {children}
+      </span>
+    </p>
   );
 }

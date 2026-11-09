@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { BRAND_GRADIENT, LOGO_PATH, LOGO_VIEWBOX } from "@/lib/logo";
+import { INK, INK_FOREGROUND, LOGO_PATH, LOGO_VIEWBOX, SUCCESS } from "@/lib/logo";
 
 export const alt = "Habitual — build habits with a buddy watching";
 export const size = { width: 1200, height: 630 };
@@ -20,7 +20,7 @@ export default async function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: BRAND_GRADIENT,
+          background: INK,
           padding: "72px",
           color: "white",
           fontFamily: "sans-serif",
@@ -35,14 +35,14 @@ export default async function OpengraphImage() {
               width: "56px",
               height: "56px",
               borderRadius: "16px",
-              background: "rgba(255,255,255,0.18)",
+              background: INK_FOREGROUND,
             }}
           >
-            <svg viewBox={LOGO_VIEWBOX} width={30} height={31} fill="#fff">
+            <svg viewBox={LOGO_VIEWBOX} width={30} height={31} fill={INK}>
               <path d={LOGO_PATH} />
             </svg>
           </div>
-          <div style={{ fontSize: "34px", fontWeight: 600, letterSpacing: "-0.02em" }}>
+          <div style={{ fontSize: "34px", fontWeight: 500, letterSpacing: "-0.03em" }}>
             Habitual
           </div>
         </div>
@@ -51,9 +51,9 @@ export default async function OpengraphImage() {
           <div
             style={{
               fontSize: "78px",
-              fontWeight: 700,
-              lineHeight: 1.05,
-              letterSpacing: "-0.035em",
+              fontWeight: 400,
+              lineHeight: 1,
+              letterSpacing: "-0.05em",
               maxWidth: "900px",
             }}
           >
@@ -74,7 +74,7 @@ export default async function OpengraphImage() {
                 width: "38px",
                 height: "38px",
                 borderRadius: "10px",
-                background: i === 2 ? "rgba(255,255,255,0.22)" : "white",
+                background: i === 2 ? "rgba(255,255,255,0.14)" : SUCCESS,
               }}
             />
           ))}

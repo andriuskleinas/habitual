@@ -15,13 +15,36 @@ export function LogoGlyph({ className }: { className?: string }) {
   );
 }
 
+/**
+ * Where the mark sits. `default` is the page background in either theme;
+ * `inverse` is the ink band, which is the same colour for everyone.
+ */
+type LogoTone = "default" | "inverse";
+
+/**
+ * Monochrome, like the type around it: the tile takes the text colour of the
+ * surface it sits on and the glyph is cut out of it. Colour in this product
+ * means something (indigo acts, green is kept, amber is at stake), so the logo
+ * stays out of that system instead of borrowing one of its meanings.
+ */
+const TILE: Record<LogoTone, string> = {
+  default: "bg-foreground text-background",
+  inverse: "bg-ink-foreground text-ink",
+};
+
 /** The monogram tile on its own — used wherever the wordmark won't fit. */
-export function LogoMark({ className }: { className?: string }) {
+export function LogoMark({
+  tone = "default",
+  className,
+}: {
+  tone?: LogoTone;
+  className?: string;
+}) {
   return (
     <span
       className={cn(
-        // Flat: a gradient is invisible at 32px and only reads as "template".
-        "bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-[9px]",
+        "flex size-8 items-center justify-center rounded-[9px]",
+        TILE[tone],
         className,
       )}
     >
@@ -38,15 +61,17 @@ export function LogoMark({ className }: { className?: string }) {
  */
 export function Wordmark({
   href = "/",
+  tone = "default",
   className,
 }: {
   /** Pass `null` to render a non-interactive mark (e.g. on the page it links to). */
   href?: string | null;
+  tone?: LogoTone;
   className?: string;
 }) {
   const inner = (
     <>
-      <LogoMark />
+      <LogoMark tone={tone} />
       <span className="text-lg font-medium tracking-[-0.03em]">Habitual</span>
     </>
   );

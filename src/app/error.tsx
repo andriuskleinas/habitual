@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { AlertTriangle, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Error({
@@ -24,14 +24,11 @@ export default function Error({
       className="flex flex-1 items-center justify-center px-5 py-16 sm:px-8"
     >
       <div className="flex max-w-md flex-col items-center gap-4 text-center">
-        <span className="bg-destructive/10 text-destructive flex size-14 items-center justify-center rounded-2xl">
-          <AlertTriangle className="size-7" aria-hidden />
-        </span>
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-3xl leading-tight tracking-[-0.04em] text-balance">
           Something went wrong
         </h1>
         <p className="text-muted-foreground text-pretty">
-          That&apos;s on us, not you. Try again — your streak is safe.
+          That&apos;s on us, not you. Try again. Your streak is safe.
         </p>
         {error.digest && (
           <p className="text-muted-foreground font-mono text-xs">

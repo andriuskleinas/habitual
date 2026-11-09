@@ -1,16 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ArrowRight,
-  CalendarDays,
-  Eye,
-  Flame,
-  HandCoins,
-  KeyRound,
-  LifeBuoy,
-  Trophy,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { claimInvite } from "./actions";
 import {
@@ -31,8 +22,8 @@ import { parsePendingReaction } from "@/lib/reactions";
 import { ChainGrid } from "@/components/chain-grid";
 import { ReactionsFeed } from "@/components/reactions-feed";
 import { StickyCheerBar } from "@/components/sticky-cheer-bar";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 /**
  * Chat-preview text to sit beside the generated OG image.
@@ -220,11 +211,11 @@ export default async function InvitePage({
     status === "failed"
       ? `${owner} blew it.${view.stake_text ? " Time to collect." : ""}`
       : status === "won"
-        ? `${owner} finished the whole run. 🏆`
+        ? `${owner} finished the whole run.`
         : status === "upcoming"
           ? `Starts ${formatDay(view.start_date, { weekday: true })}.`
           : loggedToday
-            ? `${owner} checked in today. 🔥`
+            ? `${owner} checked in today.`
             : !ev.dueNow
               ? `${owner} is square for this ${noun.one}.`
               : `${owner} hasn't logged ${slot} yet.`;
@@ -237,7 +228,7 @@ export default async function InvitePage({
       : status === "won"
         ? "They actually did it. That deserves something from you."
         : status === "upcoming"
-          ? "Get in early — a cheer waiting on day one is hard to ignore."
+          ? "Get in early. A cheer waiting on day one is hard to ignore."
           : status === "due"
             ? `The slot for ${slot} is still empty. A nudge from you is the entire point of this link.`
             : ev.streak >= 7
@@ -250,145 +241,118 @@ export default async function InvitePage({
 
   return (
     <>
-      <header className="bg-background/80 sticky top-0 z-50 w-full border-b backdrop-blur-md">
+      <header className="bg-background/85 border-border sticky top-0 z-50 w-full border-b backdrop-blur-md">
         <div className="mx-auto flex h-16 w-full max-w-3xl items-center justify-between px-5 sm:px-8">
           <Wordmark />
           <span
-            className="text-success-ink ring-success/25 bg-success/10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1"
+            className="text-success-ink inline-flex items-center gap-2 text-sm"
             title="This page updates as they check in"
           >
             <span
-              className="bg-success size-1.5 animate-pulse rounded-full"
+              className="bg-success size-2 animate-pulse rounded-full"
               aria-hidden
             />
             Live
-            <Eye className="size-3.5" aria-hidden />
           </span>
         </div>
       </header>
 
       <main
         id="main"
-        className="mx-auto w-full max-w-3xl flex-1 px-5 pt-8 pb-28 sm:px-8 sm:py-12"
+        className="mx-auto w-full max-w-3xl flex-1 px-5 pt-10 pb-28 sm:px-8 sm:py-14"
       >
-        {/* Hero — who, what, and how far in, in one glance */}
-        <section className="flex flex-col gap-3">
-          <div className="flex items-center gap-2.5">
+        {/* Who, what, and how far in, in one glance */}
+        <section>
+          <p className="text-muted-foreground flex items-center gap-2.5 text-sm text-pretty">
             <span
-              className="from-brand-from to-brand-to text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-sm font-semibold uppercase"
+              className="bg-pastel-lavender text-pastel-foreground flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium uppercase"
               aria-hidden
             >
               {owner.slice(0, 1)}
             </span>
-            <p className="text-muted-foreground min-w-0 text-sm text-pretty break-all">
-              <span className="text-foreground font-medium">{owner}</span> asked
-              you to keep them honest
-            </p>
-          </div>
+            <span className="min-w-0 break-words">
+              <span className="text-foreground">{owner}</span> asked you to keep
+              them honest
+            </span>
+          </p>
 
-          <h1 className="text-2xl font-bold tracking-tight text-balance break-all sm:text-3xl">
+          <h1 className="mt-5 text-[clamp(2.25rem,6vw,3.75rem)] leading-[0.98] tracking-[-0.05em] text-balance break-words">
             {view.title}
           </h1>
 
-          <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs">
-            <span className="ring-foreground/10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1">
-              <CalendarDays className="size-3.5" aria-hidden />
-              {cadenceLabel(view.cadence, view.cadence_weekday)}
-            </span>
-            <span className="ring-foreground/10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1">
-              {formatDay(view.start_date)}
-              {view.end_date ? ` – ${formatDay(view.end_date)}` : ""}
-            </span>
-            {periodIndex !== null && ev.totalPeriods !== null && (
-              <span className="text-success-ink bg-success/12 inline-flex items-center rounded-full px-2.5 py-1 font-medium">
-                {`${noun.one[0].toUpperCase()}${noun.one.slice(1)} ${periodIndex} of ${ev.totalPeriods}`}
-              </span>
-            )}
-          </div>
+          <p className="text-muted-foreground mt-4 text-sm">
+            {[
+              cadenceLabel(view.cadence, view.cadence_weekday),
+              `${formatDay(view.start_date)}${view.end_date ? ` – ${formatDay(view.end_date)}` : ""}`,
+              periodIndex !== null && ev.totalPeriods !== null
+                ? `${noun.one} ${periodIndex} of ${ev.totalPeriods}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
         </section>
 
-        {/* The stake is the drama — it's why a buddy cares at all */}
+        {/* The stake is the drama: it's why a buddy cares at all. Same ruled
+            quote as the owner view. */}
         {view.stake_text && (
-          <section aria-label="What's on the line" className="mt-5">
-            {/* Amber, matching the owner view: the stake is what a watcher is
-                here to hold over them. */}
-            <div className="ring-cheer/40 from-cheer/20 via-cheer/[0.08] flex items-start gap-3.5 rounded-2xl bg-gradient-to-r to-transparent px-4 py-4 ring-1 sm:px-5">
-              <span className="bg-cheer/25 text-cheer-ink flex size-11 shrink-0 items-center justify-center rounded-xl">
-                <HandCoins className="size-5" aria-hidden />
-              </span>
-              <div className="flex min-w-0 flex-col gap-0.5">
-                <p className="text-cheer-ink text-[0.7rem] font-semibold tracking-widest uppercase">
-                  On the line
-                </p>
-                <p className="text-base font-semibold text-pretty break-all sm:text-lg">
-                  {view.stake_text}
-                </p>
-              </div>
-            </div>
+          <section
+            aria-label="What's on the line"
+            className="border-border mt-8 grid gap-2 border-y py-5 sm:grid-cols-[8rem_minmax(0,1fr)] sm:items-baseline sm:gap-6"
+          >
+            <p className="text-cheer-ink text-xs font-medium tracking-[0.1em] uppercase">
+              On the line
+            </p>
+            <p className="font-serif text-[clamp(1.5rem,3.4vw,2rem)] leading-[1.1] text-pretty break-words italic">
+              {view.stake_text}
+            </p>
           </section>
         )}
 
-        {/* Status line — the single fact a buddy opens this link for */}
-        <section className="mt-5">
-          <div
-            className={
-              status === "failed"
-                ? "ring-destructive/25 bg-destructive/[0.07] flex items-start gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
-                : status === "ok" || status === "won"
-                  ? "ring-success/25 bg-success/10 flex items-start gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
-                  : "ring-foreground/10 bg-muted/40 flex items-start gap-2.5 rounded-xl px-4 py-3.5 text-sm ring-1"
-            }
-          >
+        {/* The news and the ask, together: the reaction lands best at the
+            moment the visitor reads the state of the run. */}
+        <section
+          id="cheer"
+          className="bg-muted/60 mt-8 scroll-mt-24 rounded-3xl p-5 sm:p-7"
+        >
+          <p className="flex items-start gap-3">
             <span
-              className={
+              className={cn(
+                "mt-2.5 size-2.5 shrink-0 rounded-full",
                 status === "failed"
-                  ? "bg-destructive mt-1.5 size-2.5 shrink-0 rounded-full"
+                  ? "bg-destructive"
                   : status === "ok" || status === "won"
-                    ? "bg-success mt-1.5 size-2.5 shrink-0 rounded-full"
-                    : "bg-muted-foreground/40 mt-1.5 size-2.5 shrink-0 rounded-full"
-              }
+                    ? "bg-success"
+                    : "bg-muted-foreground/40",
+              )}
               aria-hidden
             />
-            <span className="flex flex-col gap-0.5">
-              <span className="font-medium text-pretty">{headline}</span>
-              <span className="text-muted-foreground text-pretty">{pitch}</span>
+            <span className="text-2xl leading-tight tracking-[-0.03em] text-balance">
+              {headline}
             </span>
-          </div>
-        </section>
+          </p>
+          <p className="text-muted-foreground mt-2 pl-5.5 text-pretty">{pitch}</p>
 
-        {/* Buddy action — the page's job. Sits directly under the news, before
-            the detail, because that's the moment the reaction is felt. */}
-        <section id="cheer" className="mt-5 scroll-mt-24">
-          {isOwner ? (
-            <Card className="border-border/60 border-dashed">
-              <CardContent className="flex flex-col items-center gap-2 py-6 text-center">
-                <p className="font-medium">This is your challenge</p>
-                <p className="text-muted-foreground text-sm text-pretty">
-                  This is exactly what your buddy sees. Manage it from the owner
-                  view.
+          <div className="mt-6">
+            {isOwner ? (
+              <div className="flex flex-col items-start gap-3">
+                <p className="text-sm text-pretty">
+                  This is your challenge, exactly as your buddy sees it.
                 </p>
-                <Button variant="outline" className="mt-2" asChild>
+                <Button variant="outline" asChild>
                   <Link href={`/challenges/${view.id}`}>
                     Open owner view
                     <ArrowRight className="size-4" aria-hidden />
                   </Link>
                 </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="ring-primary/25 bg-primary/[0.03]">
-              <CardContent className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1 text-center">
-                  <p className="text-lg font-semibold text-balance">
-                    Cheer {owner} on
-                  </p>
-                  <p className="text-muted-foreground text-sm text-pretty">
-                    {cheerers > 0
-                      ? `${cheerers} ${cheerers === 1 ? "person has" : "people have"} already reacted. They see yours the moment you send it.`
-                      : `Be the first to react — ${owner} sees it the moment you send it.`}
-                  </p>
-                </div>
-
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <p className="text-muted-foreground text-sm text-pretty">
+                  {cheerers > 0
+                    ? `${cheerers} ${cheerers === 1 ? "person has" : "people have"} already reacted. ${owner} sees yours the moment you send it.`
+                    : `Be the first to react. ${owner} sees it the moment you send it.`}
+                </p>
                 {isSignedIn ? (
                   <BuddyReactions
                     token={token}
@@ -398,271 +362,188 @@ export default async function InvitePage({
                 ) : (
                   <CheerPrompt token={token} ownerName={owner} />
                 )}
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            )}
+          </div>
         </section>
 
-        {/* Stats */}
-        <section
-          aria-label="Progress"
-          className={`mt-8 grid gap-3 ${
-            ev.skipsLeft !== null ? "grid-cols-3" : "grid-cols-2"
-          }`}
-        >
-          <Card size="sm">
-            <CardContent className="flex flex-col gap-0.5">
-              <span className="text-success-ink flex items-center gap-1">
-                <Flame className="size-4" aria-hidden />
-                <span className="text-2xl font-bold tabular-nums">
-                  {ev.streak}
-                </span>
-              </span>
-              <p className="text-muted-foreground text-xs">
-                {noun.one} streak
-                {ev.bestStreak > 0 ? ` · best ${ev.bestStreak}` : ""}
-              </p>
-            </CardContent>
-          </Card>
-          <Card size="sm">
-            <CardContent className="flex flex-col gap-0.5">
-              <span className="flex items-center gap-1">
-                <Trophy className="text-success-ink size-4" aria-hidden />
-                <span className="text-2xl font-bold tabular-nums">
-                  {ev.mode === "total"
-                    ? ev.totalLogged.toLocaleString("en-US")
-                    : ev.donePeriods}
-                </span>
-                {ev.mode === "total" ? (
-                  <span className="text-muted-foreground text-sm">
-                    /{(ev.totalTarget ?? 0).toLocaleString("en-US")}
-                  </span>
-                ) : (
-                  ev.totalPeriods && (
-                    <span className="text-muted-foreground text-sm">
-                      /{ev.totalPeriods}
-                    </span>
-                  )
-                )}
-              </span>
-              <p className="text-muted-foreground text-xs">
-                {ev.mode === "total" ? view.target_unit || "total" : "done"}
-                {ev.daysRemaining !== null
-                  ? ` · ${ev.daysRemaining} days left`
-                  : ""}
-              </p>
-            </CardContent>
-          </Card>
-          {ev.skipsLeft !== null && (
-            <Card size="sm">
-              <CardContent className="flex flex-col gap-0.5">
-                <span className="flex items-center gap-1">
-                  <LifeBuoy
-                    className={
-                      ev.skipsLeft === 0
-                        ? "text-warning-ink size-4"
-                        : "text-primary size-4"
-                    }
-                    aria-hidden
-                  />
-                  <span className="text-2xl font-bold tabular-nums">
-                    {ev.skipsLeft}
-                  </span>
-                </span>
-                <p className="text-muted-foreground text-xs">
-                  skips left{ev.skipsAllowed ? ` of ${ev.skipsAllowed}` : ""}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </section>
-
-        {ev.percent !== null && (
-          <section className="mt-3 flex flex-col gap-1.5">
-            {/* Just the percentage: the stat cards above already carry the
-                counts, and a second "days left" figure derived a different way
-                only ever reads as a contradiction. */}
-            <p className="text-muted-foreground text-xs tabular-nums">
-              {ev.percent}% of the run
-            </p>
-            <div
-              className="bg-muted h-2.5 w-full overflow-hidden rounded-full"
-              role="progressbar"
-              aria-valuenow={ev.percent}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label="Challenge completion"
-            >
-              <div
-                className={`h-full rounded-full transition-all duration-700 ${
-                  status === "failed" ? "bg-muted-foreground/40" : "bg-success"
-                }`}
-                style={{ width: `${ev.percent}%` }}
+        {/* The scoreboard */}
+        <section aria-label="Progress" className="mt-12 flex flex-col gap-8">
+          <div className={cn("grid", ev.skipsLeft !== null ? "grid-cols-3" : "grid-cols-2")}>
+            <Figure
+              label="Streak"
+              value={ev.streak.toLocaleString("en-US")}
+              unit={ev.bestStreak > ev.streak ? `best ${ev.bestStreak}` : `${noun.one}s`}
+              tone={status === "failed" ? undefined : "kept"}
+            />
+            <Figure
+              label={ev.mode === "total" ? view.target_unit || "Total" : "Done"}
+              value={(ev.mode === "total" ? ev.totalLogged : ev.donePeriods).toLocaleString("en-US")}
+              unit={
+                ev.mode === "total"
+                  ? `of ${(ev.totalTarget ?? 0).toLocaleString("en-US")}`
+                  : ev.totalPeriods
+                    ? `of ${ev.totalPeriods}`
+                    : ""
+              }
+              className="border-border border-l pl-4 sm:pl-6"
+            />
+            {ev.skipsLeft !== null && (
+              <Figure
+                label="Skips left"
+                value={String(ev.skipsLeft)}
+                unit={ev.skipsAllowed ? `of ${ev.skipsAllowed}` : ""}
+                tone={ev.skipsLeft === 0 ? "warning" : undefined}
+                className="border-border border-l pl-4 sm:pl-6"
               />
-            </div>
-          </section>
-        )}
+            )}
+          </div>
 
-        {/* The whole run at a glance — makes an early streak of 1 read as
-            "just started" instead of "barely trying". */}
-        {periods.length > 0 && (
-          <section className="mt-3">
+          {/* The whole run at a glance: makes an early streak of 1 read as
+              "just started" instead of "barely trying". */}
+          {periods.length > 0 && (
             <ChainGrid periods={periods} done={doneSet} today={today} legend />
-          </section>
-        )}
+          )}
 
-        {(ev.skipsAllowed !== null || ev.maxMissesInRow !== null) && (
-          <p className="text-muted-foreground mt-2.5 text-xs text-pretty">
-            The deal:{" "}
-            {describeAllowance({
-              skipsAllowed: ev.skipsAllowed,
-              maxMissesInRow: ev.maxMissesInRow,
-              cadence: view.cadence,
-            }).toLowerCase()}
-          </p>
-        )}
+          {(ev.skipsAllowed !== null || ev.maxMissesInRow !== null) && (
+            <p className="text-muted-foreground -mt-4 text-[13px] text-pretty">
+              The deal:{" "}
+              {describeAllowance({
+                skipsAllowed: ev.skipsAllowed,
+                maxMissesInRow: ev.maxMissesInRow,
+                cadence: view.cadence,
+              }).toLowerCase()}
+            </p>
+          )}
+        </section>
 
-        {/* Reactions wall */}
         {reactions.length > 0 && (
-          <section className="mt-8 flex flex-col gap-3">
-            <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
-              Reactions
-            </h2>
+          <section className="border-border bg-card mt-12 flex flex-col gap-4 rounded-3xl border p-5 sm:p-6">
+            <h2 className="text-xl tracking-[-0.025em]">Reactions</h2>
             <ReactionsFeed reactions={reactions} />
           </section>
         )}
 
-        {/* Recent activity */}
         {rows.length > 0 && (
-          <section className="mt-8 flex flex-col gap-3">
-            <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
-              Recent
-            </h2>
-            <ul className="flex flex-col gap-2">
+          <section className="mt-12 flex flex-col gap-3">
+            <h2 className="text-xl tracking-[-0.025em]">Recent</h2>
+            <ul className="border-border divide-border divide-y border-y">
               {rows.slice(0, 10).map((row) => (
                 <li
                   key={row.date}
-                  className="ring-foreground/10 flex items-start gap-3 rounded-lg px-3 py-2 ring-1"
+                  className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-4 py-3 text-sm"
                 >
-                  <span className="bg-success/12 text-success-ink flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold">
-                    {formatDay(row.date)}
+                  <span className="text-muted-foreground tabular-nums">
+                    {row.date === today
+                      ? "Today"
+                      : row.date === addDays(today, -1)
+                        ? "Yesterday"
+                        : formatDay(row.date, { weekday: true })}
                   </span>
-                  <div className="flex min-w-0 flex-col">
-                    <span className="text-sm font-medium tabular-nums">
-                      {ev.mode === "each" ? (
-                        <>
-                          {row.value}{" "}
-                          <span className="text-muted-foreground font-normal">
-                            / {view.daily_target}
-                            {view.target_unit ? ` ${view.target_unit}` : ""}
-                          </span>
-                        </>
-                      ) : ev.mode === "total" ? (
-                        `+${formatCount(row.value, view.target_unit)}`
-                      ) : (
-                        "Done ✓"
-                      )}
-                      <span className="text-muted-foreground ml-1.5 text-xs font-normal">
-                        {row.date === today
-                          ? "today"
-                          : row.date === addDays(today, -1)
-                            ? "yesterday"
-                            : ""}
+                  <span className="min-w-0">
+                    {ev.mode === "each" ? (
+                      <span className="tabular-nums">
+                        {row.value}
+                        <span className="text-muted-foreground">
+                          {" "}
+                          of {view.daily_target}
+                          {view.target_unit ? ` ${view.target_unit}` : ""}
+                        </span>
                       </span>
-                    </span>
+                    ) : ev.mode === "total" ? (
+                      <span className="tabular-nums">
+                        +{formatCount(row.value, view.target_unit)}
+                      </span>
+                    ) : (
+                      <span className="text-success-ink">Kept</span>
+                    )}
                     {row.note && (
-                      <span className="text-muted-foreground text-sm text-pretty break-all">
+                      <span className="text-muted-foreground mt-0.5 block text-pretty break-words">
                         {row.note}
                       </span>
                     )}
-                  </div>
+                  </span>
                 </li>
               ))}
             </ul>
           </section>
         )}
 
-        {/* Conversion footer — a watcher is the warmest possible lead, so the
-            ask is tailored to exactly how far along they already are. */}
+        {/* Conversion: a watcher is the warmest possible lead, so the ask is
+            tailored to exactly how far along they already are. On the ink
+            band, like the landing page it leads to. */}
         {!isOwner && (
-          <section className="mt-12">
-            <div className="ring-primary/20 bg-primary/[0.04] flex flex-col items-center gap-3 rounded-2xl px-6 py-8 text-center">
-              {!isSignedIn ? (
-                <>
-                  <p className="text-lg font-semibold text-balance">
-                    Want someone watching your streak?
-                  </p>
-                  <p className="text-muted-foreground max-w-sm text-sm text-pretty">
-                    Create a free account, set your own challenge, and send a
-                    link like this one to a friend.
-                  </p>
-                  <ol className="text-muted-foreground my-1 flex flex-col gap-1.5 text-sm sm:flex-row sm:gap-5">
-                    <Step n={1}>Pick a habit</Step>
-                    <Step n={2}>Put something on the line</Step>
-                    <Step n={3}>Send the link</Step>
-                  </ol>
-                  <Button size="lg" className="mt-1" asChild>
-                    <Link href={`/signup?next=/i/${token}`}>
-                      Create a free account
-                      <ArrowRight className="size-4" aria-hidden />
-                    </Link>
-                  </Button>
-                </>
-              ) : !hasPassword ? (
-                <>
-                  <span className="bg-primary/10 text-primary flex size-11 items-center justify-center rounded-xl">
-                    <KeyRound className="size-5" aria-hidden />
-                  </span>
-                  <p className="text-lg font-semibold text-balance">
-                    Finish setting up your account
-                  </p>
-                  <p className="text-muted-foreground max-w-sm text-sm text-pretty">
-                    You&apos;re signed in with an emailed link. Add a password
-                    and you can sign in instantly — then start your own
-                    challenge and invite someone to watch you.
-                  </p>
-                  <Button size="lg" className="mt-1" asChild>
-                    <Link href={`/account/password?next=/i/${token}`}>
-                      Set a password
-                      <ArrowRight className="size-4" aria-hidden />
-                    </Link>
-                  </Button>
-                </>
-              ) : !ownsAnyChallenge ? (
-                <>
-                  <p className="text-lg font-semibold text-balance">
-                    Your turn — who&apos;s watching you?
-                  </p>
-                  <p className="text-muted-foreground max-w-sm text-sm text-pretty">
-                    You&apos;re holding {owner} accountable. Set your own
-                    challenge and send them a link back.
-                  </p>
-                  <Button size="lg" className="mt-1" asChild>
-                    <Link href="/challenges/new">
-                      Start your own challenge
-                      <ArrowRight className="size-4" aria-hidden />
-                    </Link>
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <p className="font-semibold text-balance">
-                    Keep an eye on your own streak too
-                  </p>
-                  <Button variant="outline" className="mt-1" asChild>
-                    <Link href="/dashboard">
-                      Go to my dashboard
-                      <ArrowRight className="size-4" aria-hidden />
-                    </Link>
-                  </Button>
-                </>
-              )}
-            </div>
+          <section className="band-ink mt-14 flex flex-col items-start gap-4 rounded-3xl px-6 py-10 sm:px-10 sm:py-12">
+            {!isSignedIn ? (
+              <>
+                <h2 className="max-w-[16ch] text-[clamp(1.875rem,4.5vw,2.75rem)] leading-none tracking-[-0.045em] text-balance">
+                  Want someone{" "}
+                  <em className="text-ink-accent font-serif tracking-[-0.02em]">
+                    watching
+                  </em>{" "}
+                  your streak?
+                </h2>
+                <p className="text-ink-muted max-w-md text-pretty">
+                  Pick a habit, put something on the line, and send a link like
+                  this one to a friend. It&apos;s free.
+                </p>
+                <Button size="xl" variant="inverse" className="mt-2" asChild>
+                  <Link href={`/signup?next=/i/${token}`}>
+                    Create a free account
+                    <ArrowRight className="size-5" aria-hidden />
+                  </Link>
+                </Button>
+              </>
+            ) : !hasPassword ? (
+              <>
+                <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] leading-none tracking-[-0.045em] text-balance">
+                  Finish setting up your account
+                </h2>
+                <p className="text-ink-muted max-w-md text-pretty">
+                  You&apos;re signed in with an emailed link. Add a password to
+                  sign in instantly, then start a challenge of your own.
+                </p>
+                <Button size="xl" variant="inverse" className="mt-2" asChild>
+                  <Link href={`/account/password?next=/i/${token}`}>
+                    Set a password
+                    <ArrowRight className="size-5" aria-hidden />
+                  </Link>
+                </Button>
+              </>
+            ) : !ownsAnyChallenge ? (
+              <>
+                <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] leading-none tracking-[-0.045em] text-balance">
+                  Your turn. Who&apos;s watching you?
+                </h2>
+                <p className="text-ink-muted max-w-md text-pretty">
+                  You&apos;re holding {owner} accountable. Set your own
+                  challenge and send them a link back.
+                </p>
+                <Button size="xl" variant="inverse" className="mt-2" asChild>
+                  <Link href="/challenges/new">
+                    Start your own challenge
+                    <ArrowRight className="size-5" aria-hidden />
+                  </Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl tracking-[-0.03em] text-balance">
+                  Keep an eye on your own streak too
+                </h2>
+                <Button variant="inverse-outline" size="lg" asChild>
+                  <Link href="/dashboard">
+                    Go to my dashboard
+                    <ArrowRight className="size-4" aria-hidden />
+                  </Link>
+                </Button>
+              </>
+            )}
           </section>
         )}
 
         <footer className="text-muted-foreground mt-10 text-center text-xs">
-          Powered by Habitual · habits stick when someone&apos;s watching
+          Habitual. Habits stick when someone&apos;s watching.
         </footer>
       </main>
 
@@ -678,25 +559,40 @@ export default async function InvitePage({
                   `/i/${token}?r=${status === "due" ? "nudge" : "cheer"}`,
                 )}`
           }
-          label={
-            status === "due"
-              ? `👋 Nudge ${owner}`
-              : `🎉 Cheer ${owner} on`
-          }
+          label={status === "due" ? `Nudge ${owner}` : `Cheer ${owner} on`}
         />
       )}
     </>
   );
 }
 
-/** Numbered step in the "how it works" strip under the signed-out CTA. */
-function Step({ n, children }: { n: number; children: React.ReactNode }) {
+/** A big number with its label above and a short unit beside it. */
+function Figure({
+  label,
+  value,
+  unit,
+  tone,
+  className,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+  tone?: "kept" | "warning";
+  className?: string;
+}) {
   return (
-    <li className="flex items-center justify-center gap-1.5">
-      <span className="bg-primary/10 text-primary flex size-5 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-semibold">
-        {n}
+    <div className={cn("flex min-w-0 flex-col gap-2", className)}>
+      <span className="text-muted-foreground text-[13px] capitalize">{label}</span>
+      <span
+        className={cn(
+          "text-4xl leading-none tracking-[-0.045em] tabular-nums sm:text-5xl",
+          tone === "kept" && "text-success-ink",
+          tone === "warning" && "text-warning-ink",
+        )}
+      >
+        {value}
       </span>
-      {children}
-    </li>
+      {unit && <span className="text-muted-foreground text-[13px]">{unit}</span>}
+    </div>
   );
 }

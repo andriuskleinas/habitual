@@ -19,7 +19,7 @@ export function SiteHeader() {
   return (
     <header className="band-ink border-ink-line sticky top-0 z-50 w-full border-b">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-5 sm:px-8">
-        <Wordmark />
+        <Wordmark tone="inverse" />
 
         <nav
           aria-label="Sections"

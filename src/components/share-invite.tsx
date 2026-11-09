@@ -59,54 +59,54 @@ export function ShareInvite({
   }
 
   return (
-    <div className="border-border/60 flex flex-col gap-3 rounded-xl border border-dashed px-4 py-4">
-      {/* The QR used to be the size of the card and pushed everything else
-          below the fold. Sending a link is the common case, so the code shrinks
-          to a thumbnail beside the copy and the buttons get a full-width row of
-          their own. Still dark-on-white in both themes so it always scans. */}
-      <div className="flex items-center gap-3">
-        <span className="shrink-0 rounded-lg bg-white p-1.5">
-          <QRCodeSVG value={url} size={104} marginSize={1} level="M" />
-        </span>
-
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <p className="text-sm font-medium">Invite your buddy</p>
-          <p className="text-muted-foreground text-xs text-pretty">
-            Scan it or send the link — they watch live, no account needed.
-          </p>
-          <p className="text-muted-foreground truncate text-[0.7rem]">
-            {url.replace(/^https?:\/\//, "")}
-          </p>
-        </div>
+    <section className="border-border bg-card flex flex-col gap-4 rounded-3xl border p-5">
+      <div>
+        <h2 className="text-lg tracking-[-0.02em]">Your buddy</h2>
+        <p className="text-muted-foreground mt-1 text-sm text-pretty">
+          Send this link. They can watch live without an account, and sign in
+          only to cheer or nudge.
+        </p>
       </div>
 
-      <div className="flex gap-2">
-        {canShare && (
-          <Button type="button" size="sm" className="flex-1" onClick={share}>
-            <Share2 className="size-4" />
-            Share
-          </Button>
-        )}
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="flex-1"
-          onClick={copy}
-        >
+      {/* The link first: sending it is the common case. The copy control
+          lives inside the field so the URL and the action read as one thing. */}
+      <div className="border-input flex min-w-0 items-center gap-2 rounded-full border py-1 pr-1 pl-4">
+        <span className="text-muted-foreground min-w-0 flex-1 truncate text-sm">
+          {url.replace(/^https?:\/\//, "")}
+        </span>
+        <Button type="button" size="sm" variant="secondary" onClick={copy}>
           {copied ? (
             <>
-              <Check className="size-4" />
+              <Check className="size-3.5" aria-hidden />
               Copied
             </>
           ) : (
             <>
-              <Copy className="size-4" />
-              Copy link
+              <Copy className="size-3.5" aria-hidden />
+              Copy
             </>
           )}
         </Button>
       </div>
-    </div>
+
+      {/* QR as a thumbnail, for showing someone in the room. Dark-on-white in
+          both themes so it always scans. */}
+      <div className="flex items-center gap-4">
+        <span className="shrink-0 rounded-xl bg-white p-1.5 ring-1 ring-black/5">
+          <QRCodeSVG value={url} size={84} marginSize={1} level="M" />
+        </span>
+        <div className="flex min-w-0 flex-col items-start gap-2">
+          <p className="text-muted-foreground text-xs text-pretty">
+            Or let them scan it from your screen.
+          </p>
+          {canShare && (
+            <Button type="button" size="sm" onClick={share}>
+              <Share2 className="size-3.5" aria-hidden />
+              Share
+            </Button>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }

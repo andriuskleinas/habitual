@@ -16,7 +16,7 @@ export default function ForgotPasswordPage() {
         id="main"
         className="flex flex-1 items-center justify-center px-5 py-10 sm:px-8"
       >
-        <div className="bg-card ring-foreground/10 w-full max-w-sm rounded-2xl p-6 shadow-sm ring-1 sm:p-8">
+        <div className="bg-card border-border w-full max-w-sm rounded-3xl border p-6 sm:p-8">
           <ForgotPasswordForm />
         </div>
       </main>

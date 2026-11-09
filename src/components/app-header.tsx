@@ -44,7 +44,7 @@ export function AppHeader({
               {displayName(profile)}
             </span>
           )}
-          <span className="from-brand-from to-brand-to text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-xs font-semibold shadow-sm">
+          <span className="bg-pastel-lavender text-pastel-foreground flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium">
             {profile ? initials(profile) : "•"}
           </span>
         </Link>

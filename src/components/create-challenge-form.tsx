@@ -121,7 +121,7 @@ function Segmented<T extends string>({
     <div
       role="group"
       aria-label={label}
-      className="bg-muted inline-flex shrink-0 rounded-lg p-0.5"
+      className="bg-muted inline-flex shrink-0 rounded-full p-0.5"
     >
       {options.map((o) => (
         <label key={o.value} className="cursor-pointer">
@@ -135,7 +135,7 @@ function Segmented<T extends string>({
             aria-label={o.label}
             className="peer sr-only"
           />
-          <span className="peer-checked:bg-background peer-checked:text-foreground peer-checked:shadow-xs peer-focus-visible:ring-ring peer-focus-visible:ring-2 text-muted-foreground block rounded-md px-2.5 py-1 text-xs font-medium transition-colors">
+          <span className="peer-checked:bg-foreground peer-checked:text-background peer-focus-visible:ring-ring peer-focus-visible:ring-2 text-muted-foreground block rounded-full px-3 py-1 text-xs font-medium transition-colors">
             {o.label}
           </span>
         </label>
@@ -368,7 +368,7 @@ export function CreateChallengeForm({ today }: { today: string }) {
         )}
       </div>
 
-      <fieldset className="border-border/70 flex flex-col gap-4 rounded-xl border border-dashed p-4">
+      <fieldset className="bg-muted/60 flex flex-col gap-4 rounded-2xl p-4 sm:p-5">
         <legend className="px-1.5 text-sm font-medium">Wiggle room</legend>
         <p className="text-muted-foreground -mt-1 text-xs text-pretty">
           Life happens. Decide up front how much slack you get — go past it and
@@ -469,7 +469,7 @@ export function CreateChallengeForm({ today }: { today: string }) {
       {/* The whole plan in plain English, so nobody has to reverse-engineer
           six dropdowns to know what they just signed up for. */}
       <div
-        className="bg-accent/50 text-accent-foreground flex flex-col gap-1 rounded-xl px-4 py-3 text-sm text-pretty"
+        className="bg-muted/60 flex flex-col gap-1 rounded-2xl px-4 py-3 text-sm text-pretty"
         aria-live="polite"
       >
         {tooShort ? (

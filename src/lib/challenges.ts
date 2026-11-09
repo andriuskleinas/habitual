@@ -213,6 +213,50 @@ export function schedulePeriods(opts: {
   return periods;
 }
 
+/**
+ * What a chain cell shows for one period.
+ *
+ * - `kept`: a check-in falls inside it.
+ * - `missed`: it has fully elapsed with nothing logged.
+ * - `now`: it covers today and is still open. A running period is never a
+ *   miss, which matches how `evaluateChallenge` counts streaks.
+ * - `upcoming`: it hasn't started.
+ */
+export type PeriodState = "kept" | "missed" | "now" | "upcoming";
+
+export function periodStates(
+  periods: Period[],
+  checkInDates: Iterable<string>,
+  today: string = todayISO(),
+): PeriodState[] {
+  const dates = [...checkInDates].sort();
+  return periods.map((p) => {
+    // Dates are ISO strings, so lexical comparison is chronological.
+    const filled = dates.some((d) => d >= p.start && d <= p.end);
+    if (filled) return "kept";
+    if (p.end < today) return "missed";
+    if (p.start <= today) return "now";
+    return "upcoming";
+  });
+}
+
+/**
+ * The slice of a schedule worth showing in a compact chain: the `size` periods
+ * ending with the current one, padded with upcoming periods when the challenge
+ * is younger than that. Keeps a dashboard row the same width for a three-day
+ * challenge and a year-long one.
+ */
+export function recentWindow<T>(
+  periods: Period[],
+  items: T[],
+  today: string = todayISO(),
+  size = 14,
+): T[] {
+  const started = periods.filter((p) => p.start <= today).length;
+  const from = Math.max(0, Math.min(started, periods.length) - size);
+  return items.slice(from, from + size);
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Allowance ("wiggle room")                                                  */
 /* -------------------------------------------------------------------------- */
