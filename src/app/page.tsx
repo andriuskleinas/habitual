@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
-import { HeroPreview } from "@/components/marketing/hero-preview";
+import { HeroCarousel } from "@/components/marketing/hero-carousel";
+import {
+  LinkDemo,
+  LogDemo,
+  SetChallengeDemo,
+  StakeDemo,
+} from "@/components/marketing/step-demos";
 import { Faq, FAQS } from "@/components/marketing/faq";
 import { LogoGlyph } from "@/components/brand";
 import { Reveal } from "@/components/reveal";
@@ -20,7 +26,7 @@ import { cn } from "@/lib/utils";
  */
 
 /* ------------------------------------------------------------------------ */
-/* Hero: example challenge cards either side of the live demo                */
+/* Pastel surfaces for the step cards                                       */
 /* ------------------------------------------------------------------------ */
 
 type Pastel = "lavender" | "amber" | "sky" | "mint";
@@ -31,49 +37,6 @@ const PASTEL: Record<Pastel, string> = {
   sky: "bg-pastel-sky",
   mint: "bg-pastel-mint",
 };
-
-/** Decorative: other challenges someone might be running. Hidden from
-    assistive tech, which gets the live demo instead. */
-function ExampleCard({
-  title,
-  streak,
-  unit,
-  pastel,
-  className,
-}: {
-  title: string;
-  streak: number;
-  unit: string;
-  pastel: Pastel;
-  className?: string;
-}) {
-  return (
-    <div
-      aria-hidden
-      className={cn(
-        "text-pastel-foreground shrink-0 flex-col justify-between rounded-[28px] p-5 text-left",
-        PASTEL[pastel],
-        className,
-      )}
-    >
-      <p className="text-lg leading-tight tracking-[-0.02em]">{title}</p>
-      <div>
-        <p className="text-6xl leading-[0.9] tracking-[-0.05em]">
-          {streak}
-        </p>
-        <p className="mt-1 text-[13px] opacity-70">{unit}</p>
-        <div className="mt-3 grid grid-cols-7 gap-1">
-          {Array.from({ length: 7 }, (_, i) => (
-            <span
-              key={i}
-              className="bg-pastel-foreground/55 aspect-square rounded-[4px]"
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------------ */
 /* How it works: one pastel card per step, each holding a real UI fragment  */
@@ -90,8 +53,8 @@ function StepCard({
   title: string;
   points: string[];
   pastel: Pastel;
-  /** The UI fragment. Illustrative, so hidden from assistive tech; `points`
-      carries the meaning. */
+  /** The animated UI fragment. Illustrative, so hidden from assistive tech;
+      `points` carries the meaning. */
   children: React.ReactNode;
 }) {
   return (
@@ -125,16 +88,6 @@ function StepCard({
     </div>
   );
 }
-
-function FragmentLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-muted-foreground text-xs">{children}</p>;
-}
-
-/** Day 12 of 14: an early miss, then a run, with two days still to come. */
-const CARD_CHAIN = [
-  "kept", "missed", "kept", "kept", "kept", "kept", "kept",
-  "kept", "kept", "kept", "kept", "kept", "upcoming", "upcoming",
-] as const;
 
 export default function Home() {
   // FAQ structured data, so search engines and AI answer surfaces can quote
@@ -202,44 +155,11 @@ export default function Home() {
               </p>
             </div>
 
-            {/* The live demo, flanked by other challenges someone might run.
-                The side cards sink below the band's edge, so the row reads as
-                a stack of cards rather than a grid. */}
-            <div className="animate-in fade-in slide-in-from-bottom-8 mt-14 flex items-end justify-center gap-4 pb-14 duration-1000 sm:mt-16 lg:gap-5">
-                <ExampleCard
-                  title="Meditate 10 minutes"
-                  streak={5}
-                  unit="day streak"
-                  pastel="sky"
-                  className="hidden h-60 w-44 translate-y-36 opacity-70 xl:flex"
-                />
-                <ExampleCard
-                  title="Run 5k on Saturdays"
-                  streak={3}
-                  unit="week streak"
-                  pastel="amber"
-                  className="hidden h-72 w-52 translate-y-24 lg:flex"
-                />
-              <div className="w-full max-w-sm shrink-0">
-                <HeroPreview />
-                <p className="text-ink-subtle mt-4 text-xs">
-                  Go on, log the open day. It&apos;s the real check-in.
-                </p>
-              </div>
-                <ExampleCard
-                  title="No phone after 10pm"
-                  streak={6}
-                  unit="day streak"
-                  pastel="mint"
-                  className="hidden h-72 w-52 translate-y-24 lg:flex"
-                />
-                <ExampleCard
-                  title="Write 300 words"
-                  streak={9}
-                  unit="day streak"
-                  pastel="lavender"
-                  className="hidden h-60 w-44 translate-y-36 opacity-70 xl:flex"
-                />
+            {/* Five challenges on a turntable. The one in the middle plays a
+                short story about what the product does, then the table turns.
+                Hover to pause; the check-in button is the real one. */}
+            <div className="animate-in fade-in slide-in-from-bottom-8 mt-14 pb-16 duration-1000 sm:mt-16">
+              <HeroCarousel />
             </div>
           </div>
         </section>
@@ -296,23 +216,7 @@ export default function Home() {
                     "Every day, weekdays, one day a week, weekly, monthly, or a running total.",
                   ]}
                 >
-                  <FragmentLabel>What is your challenge?</FragmentLabel>
-                  <p className="border-input mt-2 rounded-xl border px-3.5 py-2.5 text-[15px]">
-                    Read 20 pages a day
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2 text-[13px]">
-                    <span className="bg-foreground text-background rounded-full px-3 py-1.5">
-                      Every day
-                    </span>
-                    {["Weekdays", "Weekly", "28 days"].map((o) => (
-                      <span
-                        key={o}
-                        className="border-input rounded-full border px-3 py-1.5"
-                      >
-                        {o}
-                      </span>
-                    ))}
-                  </div>
+                  <SetChallengeDemo />
                 </StepCard>
               </Reveal>
 
@@ -326,10 +230,7 @@ export default function Home() {
                     "Your buddy sees it from day one.",
                   ]}
                 >
-                  <FragmentLabel>What&apos;s on the line?</FragmentLabel>
-                  <p className="mt-2 font-serif text-[1.75rem] leading-[1.15] italic">
-                    Lunch on me if I miss a day
-                  </p>
+                  <StakeDemo />
                 </StepCard>
               </Reveal>
 
@@ -343,23 +244,7 @@ export default function Home() {
                     "They sign in only to cheer, nudge or leave a note.",
                   ]}
                 >
-                  <FragmentLabel>Invite your buddy</FragmentLabel>
-                  <div className="border-input mt-2 flex items-center gap-2 rounded-full border py-1.5 pr-1.5 pl-4 text-sm">
-                    <span className="text-muted-foreground min-w-0 flex-1 truncate">
-                      habitual-app-kappa.vercel.app/i/c2749bec
-                    </span>
-                    <span className="bg-foreground text-background rounded-full px-3.5 py-1.5 text-[13px]">
-                      Copy
-                    </span>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2 text-[13px]">
-                    <span className="bg-pastel-amber text-pastel-foreground rounded-full px-3 py-1.5">
-                      Sam cheered you on
-                    </span>
-                    <span className="bg-pastel-amber text-pastel-foreground rounded-full px-3 py-1.5">
-                      Alex nudged you
-                    </span>
-                  </div>
+                  <LinkDemo />
                 </StepCard>
               </Reveal>
 
@@ -373,23 +258,7 @@ export default function Home() {
                     "Go past the skips you allowed and the stake is due.",
                   ]}
                 >
-                  <FragmentLabel>Read 20 pages a day · day 12 of 14</FragmentLabel>
-                  <div className="mt-3 grid grid-cols-14 gap-1">
-                    {CARD_CHAIN.map((state, i) => (
-                      <span
-                        key={i}
-                        className={cn(
-                          "aspect-square rounded-[4px]",
-                          state === "kept" && "bg-success",
-                          state === "missed" && "cell-missed",
-                          state === "upcoming" && "ring-border ring-1 ring-inset",
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-success-ink mt-3 text-sm font-medium">
-                    Day 12 logged. 20 pages read.
-                  </p>
+                  <LogDemo />
                 </StepCard>
               </Reveal>
             </ol>
