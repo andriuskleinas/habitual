@@ -29,6 +29,15 @@ const CELL: Record<PeriodState, string> = {
   upcoming: "ring-border text-muted-foreground ring-1 ring-inset",
 };
 
+/**
+ * At row size a diagonal stroke turns into noise: a run of misses reads as a
+ * hatched texture rather than as missed days. Small chains fill a miss with a
+ * faint red instead; the full calendar keeps the stroke, where it's legible.
+ */
+const CELL_COMPACT: Partial<Record<PeriodState, string>> = {
+  missed: "bg-destructive/15",
+};
+
 /** Calendars past this many weeks get too tall; longer runs use the grid. */
 const MAX_CALENDAR_WEEKS = 14;
 
@@ -178,7 +187,10 @@ export function MiniChain({
       aria-hidden
     >
       {states.map((s, i) => (
-        <span key={i} className={cn("aspect-square rounded-[3px]", CELL[s])} />
+        <span
+          key={i}
+          className={cn("aspect-square rounded-[3px]", CELL_COMPACT[s] ?? CELL[s])}
+        />
       ))}
       {/* Pad short schedules so every row's chain is the same width. */}
       {Array.from({ length: Math.max(0, 14 - states.length) }, (_, i) => (
