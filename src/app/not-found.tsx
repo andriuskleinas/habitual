@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Compass } from "lucide-react";
 import { Wordmark } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 
@@ -14,10 +13,8 @@ export default function NotFound() {
         className="flex flex-1 items-center justify-center px-5 py-16 sm:px-8"
       >
         <div className="flex max-w-md flex-col items-center gap-4 text-center">
-          <span className="bg-accent text-accent-foreground flex size-14 items-center justify-center rounded-2xl">
-            <Compass className="size-7" aria-hidden />
-          </span>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <p className="text-muted-foreground text-sm tabular-nums">404</p>
+          <h1 className="text-[clamp(2.25rem,5vw,3.25rem)] leading-none tracking-[-0.045em] text-balance">
             This page isn&apos;t here
           </h1>
           <p className="text-muted-foreground text-pretty">

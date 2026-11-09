@@ -1,22 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  ArrowRight,
-  CheckCircle2,
-  Eye,
-  Flame,
-  HandCoins,
-  Heart,
-  KeyRound,
-  PartyPopper,
-  Plus,
-  Target,
-  TrendingUp,
-  Trophy,
-  UserPlus,
-  Users,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2, Heart, Plus, Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   addDays,
@@ -24,14 +9,16 @@ import {
   evaluateChallenge,
   formatCount,
   formatDay,
+  periodNoun,
+  schedulePeriods,
   todayISO,
   type ChallengeEval,
 } from "@/lib/challenges";
 import { displayName } from "@/lib/profile";
 import { AppHeader } from "@/components/app-header";
 import { QuickLog } from "@/components/quick-log";
+import { MiniChain } from "@/components/chain-grid";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -171,8 +158,18 @@ export default async function DashboardPage() {
     return { date, count: perDay.get(date) ?? 0 };
   });
 
-  const nextUp = needsYou[0] ?? null;
   const dueWithStake = needsYou.filter((o) => o.c.stake_text).length;
+
+  const status =
+    list.length === 0
+      ? "Your challenges will live here."
+      : dueCount === 0
+        ? liveNow.length === 0
+          ? "Nothing is due right now. Your next slot will show up here."
+          : "Nothing owing right now. Come back tomorrow."
+        : dueWithStake > 0
+          ? `${dueCount} to log, ${dueWithStake} with something on the line.`
+          : `${dueCount} challenge${dueCount === 1 ? "" : "s"} waiting on you.`;
 
   return (
     <>
@@ -180,23 +177,17 @@ export default async function DashboardPage() {
 
       <main
         id="main"
-        className="mx-auto w-full max-w-5xl flex-1 px-5 py-8 sm:px-8 sm:py-12"
+        className="mx-auto w-full max-w-5xl flex-1 px-5 py-10 sm:px-8 sm:py-14"
       >
-        <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              Hey {displayName(names)} 👋
+        <section className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex min-w-0 flex-col gap-2">
+            <p className="text-muted-foreground text-sm">{longDate(today)}</p>
+            <h1 className="text-[clamp(2.25rem,5vw,3.25rem)] leading-none tracking-[-0.045em] text-balance">
+              Hi, {displayName(names)}
             </h1>
-            <p className="text-muted-foreground text-pretty">
-              {list.length === 0
-                ? "Your challenges will live here."
-                : dueCount === 0
-                  ? "Nothing owing right now. Nice work."
-                  : `${dueCount} challenge${dueCount === 1 ? "" : "s"} waiting on you.`}
-            </p>
+            <p className="text-muted-foreground text-pretty">{status}</p>
           </div>
-          {/* Starting a challenge used to hide in the header on every page; it
-              belongs here, where it's the actual job. */}
+          {/* Starting a challenge belongs here, where it's the actual job. */}
           {list.length > 0 && (
             <Button size="lg" className="sm:shrink-0" asChild>
               <Link href="/challenges/new">
@@ -207,127 +198,78 @@ export default async function DashboardPage() {
           )}
         </section>
 
-        {/* Magic-link-only accounts: one dismissible-feeling nudge toward a
-            password, which is what makes signing in on a new device instant. */}
+        {/* Magic-link-only accounts: one quiet nudge toward a password, which
+            is what makes signing in on a new device instant. */}
         {!profile?.password_set_at && (
-          <section className="mt-6">
-            <div className="ring-primary/20 bg-primary/[0.04] flex flex-col gap-3 rounded-xl px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-3">
-                <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
-                  <KeyRound className="size-4" aria-hidden />
-                </span>
-                <div className="flex flex-col">
-                  <p className="text-sm font-medium">Add a password</p>
-                  <p className="text-muted-foreground text-sm text-pretty">
-                    Sign in instantly instead of waiting for an emailed link.
-                  </p>
-                </div>
-              </div>
-              <Button size="sm" variant="outline" className="sm:shrink-0" asChild>
-                <Link href="/account/password?next=/dashboard">Set password</Link>
-              </Button>
-            </div>
+          <section className="bg-muted/60 mt-8 flex flex-col gap-3 rounded-2xl px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-pretty">
+              <span className="font-medium">Add a password.</span>{" "}
+              <span className="text-muted-foreground">
+                Sign in instantly instead of waiting for an emailed link.
+              </span>
+            </p>
+            <Button size="sm" variant="outline" className="sm:shrink-0" asChild>
+              <Link href="/account/password?next=/dashboard">Set password</Link>
+            </Button>
           </section>
         )}
 
         {list.length > 0 && (
-          <section aria-label="Where you stand" className="mt-6 flex flex-col gap-3">
-            {/* The state-of-play panel. Three equal vanity tiles used to sit
-                here; none of them told you what to do next, which is the only
-                question this page is asked. */}
-            <div className="bg-card ring-foreground/10 flex flex-col gap-4 rounded-2xl px-5 py-5 ring-1 sm:flex-row sm:items-center sm:gap-5">
-              {liveNow.length > 0 && (
-                <TodayRing done={doneNow} total={liveNow.length} />
-              )}
-              <div className="flex min-w-0 flex-col gap-1">
-                <p className="text-lg font-semibold text-pretty">
-                  {liveNow.length === 0
-                    ? "Nothing due right now"
-                    : dueCount === 0
-                      ? "You're all caught up"
-                      : `${dueCount} left to log`}
-                </p>
-                <p className="text-muted-foreground text-sm text-pretty">
-                  {liveNow.length === 0
-                    ? "No check-in is open — your next slot will show up here."
-                    : dueCount === 0
-                      ? `All ${liveNow.length} of your live challenges are covered. Come back tomorrow.`
-                      : dueWithStake > 0
-                        ? `${dueWithStake} of them ${dueWithStake === 1 ? "has" : "have"} something on the line.`
-                        : "Knock them out before the day's gone."}
-                </p>
-              </div>
-              {nextUp && (
-                <Button size="lg" className="sm:ml-auto sm:shrink-0" asChild>
-                  <Link href={`/challenges/${nextUp.c.id}`}>
-                    <span className="max-w-[14rem] truncate">
-                      Log &ldquo;{nextUp.c.title}&rdquo;
-                    </span>
-                    <ArrowRight className="size-4" aria-hidden />
-                  </Link>
-                </Button>
-              )}
-              {!nextUp && liveNow.length > 0 && (
-                <span className="text-success-ink ring-success/25 bg-success/[0.07] inline-flex items-center gap-1.5 self-start rounded-full px-3 py-1.5 text-sm font-medium ring-1 sm:ml-auto sm:self-center">
-                  <PartyPopper className="size-4" aria-hidden />
-                  Day cleared
-                </span>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatTile
-                icon={<Flame className="size-4" aria-hidden />}
-                value={currentStreak}
-                label="current streak"
-                hint={
-                  bestStreak > currentStreak ? `best ${bestStreak}` : undefined
-                }
-              />
-              <StatTile
-                icon={<TrendingUp className="size-4" aria-hidden />}
-                value={consistency === null ? "—" : `${consistency}%`}
-                label="consistency"
-                hint={
-                  closedPeriods > 0
-                    ? `${keptPeriods}/${closedPeriods} kept`
-                    : "nothing elapsed yet"
-                }
-              />
-              <ActivityTile total={totalCheckIns} days={activity} />
-            </div>
+          <section
+            aria-label="Where you stand"
+            className="bg-muted/60 mt-8 grid grid-cols-2 rounded-3xl lg:grid-cols-[1fr_1fr_1fr_1.4fr]"
+          >
+            <Stat
+              label="Due now"
+              value={liveNow.length === 0 ? "0" : `${doneNow}`}
+              unit={liveNow.length === 0 ? "nothing open" : `of ${liveNow.length} done`}
+            />
+            <Stat
+              label="Current streak"
+              value={String(currentStreak)}
+              unit={bestStreak > currentStreak ? `best ${bestStreak}` : "your best yet"}
+              tone="kept"
+              className="border-border border-l"
+            />
+            <Stat
+              label="Consistency"
+              value={consistency === null ? "–" : `${consistency}%`}
+              unit={
+                closedPeriods > 0
+                  ? `${keptPeriods} of ${closedPeriods} kept`
+                  : "starts once a slot has closed"
+              }
+              className="border-border border-t lg:border-t-0 lg:border-l"
+            />
+            <Activity
+              total={totalCheckIns}
+              days={activity}
+              className="border-border border-t border-l lg:border-t-0"
+            />
           </section>
         )}
 
         {list.length === 0 ? (
-          <section className="mt-10">
-            <Card className="border-border/60 border-dashed">
-              <CardContent className="mx-auto flex max-w-md flex-col items-center gap-3 py-12 text-center">
-                <span className="bg-accent text-accent-foreground flex size-12 items-center justify-center rounded-xl">
-                  <Target className="size-6" aria-hidden />
-                </span>
-                <div className="flex flex-col gap-1">
-                  <p className="font-medium">No challenges yet</p>
-                  <p className="text-muted-foreground text-sm text-pretty">
-                    Set a daily challenge, put a stake on it, and invite a buddy
-                    to hold you to it. It takes about a minute.
-                  </p>
-                </div>
-                <Button size="lg" className="mt-3" asChild>
-                  <Link href="/challenges/new">
-                    <Plus className="size-4" aria-hidden />
-                    Start a challenge
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+          <section className="bg-muted/60 mt-10 flex flex-col items-start gap-4 rounded-3xl px-6 py-12 sm:px-10 sm:py-16">
+            <h2 className="max-w-[16ch] text-[clamp(1.875rem,4vw,2.75rem)] leading-none tracking-[-0.04em] text-balance">
+              Start your first challenge
+            </h2>
+            <p className="text-muted-foreground max-w-md text-pretty">
+              Pick a habit, name what you lose if you skip, and send one link
+              to a friend. It takes about a minute.
+            </p>
+            <Button size="xl" className="mt-2" asChild>
+              <Link href="/challenges/new">
+                <Plus className="size-5" aria-hidden />
+                Start a challenge
+              </Link>
+            </Button>
           </section>
         ) : (
           <>
             {needsYou.length > 0 && (
               <ChallengeSection
                 title="Needs you now"
-                count={needsYou.length}
                 items={needsYou}
                 today={today}
                 tone="due"
@@ -336,7 +278,6 @@ export default async function DashboardPage() {
             {onTrack.length > 0 && (
               <ChallengeSection
                 title="All set"
-                count={onTrack.length}
                 items={onTrack}
                 today={today}
                 tone="calm"
@@ -345,7 +286,6 @@ export default async function DashboardPage() {
             {finished.length > 0 && (
               <ChallengeSection
                 title="Finished"
-                count={finished.length}
                 items={finished}
                 today={today}
                 tone="closed"
@@ -355,62 +295,52 @@ export default async function DashboardPage() {
         )}
 
         {buddyList.length > 0 && (
-          <section className="mt-12 flex flex-col gap-4">
-            <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
-              I&apos;m a buddy on
-            </h2>
-            <ul className="grid gap-4 sm:grid-cols-2">
+          <section className="mt-12">
+            <SectionHeading title="I'm a buddy on" count={buddyList.length} />
+            <ul className="border-border bg-card divide-border mt-3 divide-y rounded-3xl border">
               {buddyList.map(({ token, challenge: c }) => {
                 const checkIns: { date: string; value: number }[] =
                   c.check_ins ?? [];
-                const ev = evaluateChallenge(
-                  {
-                    cadence: c.cadence,
-                    cadenceWeekday: c.cadence_weekday,
-                    startDate: c.start_date,
-                    endDate: c.end_date,
-                    allowanceMode: c.allowance_mode,
-                    allowanceValue: c.allowance_value,
-                    maxMissesInRow: c.max_misses_in_row,
-                    dailyTarget: c.daily_target,
-                    totalTarget: c.total_target,
-                  },
-                  checkIns,
-                  today,
-                );
+                const rules = {
+                  cadence: c.cadence,
+                  cadenceWeekday: c.cadence_weekday,
+                  startDate: c.start_date,
+                  endDate: c.end_date,
+                  allowanceMode: c.allowance_mode,
+                  allowanceValue: c.allowance_value,
+                  maxMissesInRow: c.max_misses_in_row,
+                  dailyTarget: c.daily_target,
+                  totalTarget: c.total_target,
+                };
+                const ev = evaluateChallenge(rules, checkIns, today);
+                const periods = schedulePeriods({ ...rules, today });
 
                 return (
-                  <li key={c.id}>
-                    <Card className="hover:ring-primary/40 lift relative h-full hover:shadow-md">
-                      <CardContent className="flex h-full flex-col gap-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex min-w-0 flex-col gap-0.5">
-                            <Link
-                              href={`/i/${token}`}
-                              className="rounded-sm leading-snug font-medium break-all hover:underline after:absolute after:inset-0"
-                            >
-                              {c.title}
-                            </Link>
-                            <p className="text-muted-foreground inline-flex items-center gap-1 text-xs">
-                              <Eye className="size-3.5" aria-hidden />
-                              {ev.dueNow ? "Hasn't checked in yet" : "Covered"}
-                            </p>
-                          </div>
-                          <StreakPill streak={ev.streak} />
-                        </div>
-
-                        {ev.percent !== null && (
-                          <ProgressBar percent={ev.percent} muted={false} />
-                        )}
-
-                        {/* Being a buddy is a job, not a spectator seat — say
-                            what the job is. */}
-                        <p className="text-cheer-ink mt-auto inline-flex items-center gap-1.5 pt-1 text-xs font-medium">
-                          <Heart className="size-3.5" aria-hidden />
-                          {ev.dueNow ? "Nudge them" : "Send a cheer"}
-                        </p>
-                      </CardContent>
-                    </Card>
+                  <li key={c.id} className={ROW}>
+                    <div className="min-w-0 [grid-area:title]">
+                      <Link
+                        href={`/i/${token}`}
+                        className="rounded-sm text-[17px] leading-snug tracking-[-0.015em] break-words after:absolute after:inset-0 hover:underline"
+                      >
+                        {c.title}
+                      </Link>
+                      <p className="text-muted-foreground mt-0.5 text-[13px]">
+                        {cadenceLabel(c.cadence, c.cadence_weekday)} ·{" "}
+                        {ev.dueNow ? "hasn't checked in yet" : "covered"}
+                      </p>
+                    </div>
+                    <MiniChain
+                      periods={periods}
+                      done={new Set(checkIns.map((ci) => ci.date))}
+                      today={today}
+                      className="[grid-area:chain]"
+                    />
+                    <StreakFigure streak={ev.streak} cadence={c.cadence} />
+                    {/* Being a buddy is a job, not a spectator seat: say what
+                        the job is. */}
+                    <span className="text-cheer-ink self-center justify-self-end text-sm font-medium [grid-area:action]">
+                      {ev.dueNow ? "Nudge them" : "Send a cheer"}
+                    </span>
                   </li>
                 );
               })}
@@ -436,6 +366,9 @@ type ChallengeRow = {
   target_unit: string | null;
   start_date: string;
   end_date: string | null;
+  allowance_mode: string | null;
+  allowance_value: number | null;
+  max_misses_in_row: number | null;
   stake_text: string | null;
 };
 
@@ -447,166 +380,133 @@ type OwnedCard = {
   cheers: number;
 };
 
-function StatTile({
-  icon,
-  value,
-  label,
-  hint,
-}: {
-  icon: React.ReactNode;
-  value: React.ReactNode;
-  label: string;
-  hint?: string;
-}) {
-  return (
-    <div className="bg-card ring-foreground/10 lift hover:ring-success/30 flex flex-col gap-0.5 rounded-xl px-4 py-3 ring-1">
-      {/* Green, not brand indigo: every number in this row is a kept
-          commitment, and that's the colour a kept commitment has everywhere
-          else in the app. */}
-      <span className="text-success-ink flex items-center gap-1.5">
-        {icon}
-        <span className="text-xl font-bold tabular-nums sm:text-2xl">{value}</span>
-      </span>
-      <span className="text-muted-foreground text-xs">
-        {label}
-        {hint && <span className="opacity-70"> · {hint}</span>}
-      </span>
-    </div>
-  );
+/** "Monday 9 November", on the same UTC calendar the rest of the app uses. */
+function longDate(date: string): string {
+  return new Date(`${date}T00:00:00.000Z`).toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  });
 }
 
 /**
- * Done-vs-open across everything that's live right now, as a ring. A part-full
- * ring is a stronger pull than the same fraction set in type — it reads as
- * something you can finish.
+ * One cell of the summary strip. Numbers are large and light, like the rest of
+ * the type; only the streak is green, because it's the only kept-commitment
+ * number here.
  */
-function TodayRing({ done, total }: { done: number; total: number }) {
-  const degrees = total > 0 ? Math.round((done / total) * 360) : 0;
+function Stat({
+  label,
+  value,
+  unit,
+  tone,
+  className,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+  tone?: "kept";
+  className?: string;
+}) {
   return (
-    <div
-      role="img"
-      aria-label={`${done} of ${total} live challenges covered`}
-      className="relative grid size-18 shrink-0 place-items-center rounded-full transition-all duration-700"
-      style={{
-        background: `conic-gradient(var(--success) ${degrees}deg, color-mix(in oklch, var(--muted-foreground), transparent 85%) 0deg)`,
-      }}
-    >
-      <span className="bg-card absolute inset-[7px] rounded-full" />
-      <span className="relative text-sm font-bold tabular-nums">
-        {done}/{total}
+    <div className={cn("flex min-w-0 flex-col gap-2 px-5 py-5 sm:px-6", className)}>
+      <span className="text-muted-foreground text-[13px]">{label}</span>
+      <span
+        className={cn(
+          "text-4xl leading-none tracking-[-0.04em] tabular-nums sm:text-5xl",
+          tone === "kept" && "text-success-ink",
+        )}
+      >
+        {value}
       </span>
+      <span className="text-muted-foreground text-[13px] text-pretty">{unit}</span>
     </div>
   );
 }
 
-/** Check-ins per day for the last fortnight — momentum you can see at a glance. */
-function ActivityTile({
+/** Check-ins per day for the last fortnight, as bars: momentum at a glance. */
+function Activity({
   total,
   days,
+  className,
 }: {
   total: number;
   days: { date: string; count: number }[];
+  className?: string;
 }) {
+  const max = Math.max(1, ...days.map((d) => d.count));
   return (
-    <div className="bg-card ring-foreground/10 lift hover:ring-success/30 col-span-2 flex flex-col gap-2 rounded-xl px-4 py-3 ring-1">
-      <span className="text-success-ink flex items-center gap-1.5">
-        <Trophy className="size-4" aria-hidden />
-        <span className="text-xl font-bold tabular-nums sm:text-2xl">{total}</span>
+    <div className={cn("flex min-w-0 flex-col gap-2 px-5 py-5 sm:px-6", className)}>
+      <span className="text-muted-foreground text-[13px]">
+        Check-ins, last {days.length} days
       </span>
-      <div className="flex items-center gap-[3px]" aria-hidden>
+      <div className="flex h-12 items-end gap-[3px]" aria-hidden>
         {days.map((d) => (
           <span
             key={d.date}
             title={`${formatDay(d.date)} · ${d.count} check-in${d.count === 1 ? "" : "s"}`}
             className={cn(
-              "h-3.5 flex-1 rounded-[3px] transition-colors",
-              d.count === 0
-                ? "bg-muted-foreground/15"
-                : d.count === 1
-                  ? "bg-success/40"
-                  : d.count === 2
-                    ? "bg-success/70"
-                    : "bg-success",
+              "flex-1 rounded-t-[3px]",
+              d.count === 0 ? "bg-border h-[3px]" : "bg-success",
             )}
+            style={d.count ? { height: `${(d.count / max) * 100}%` } : undefined}
           />
         ))}
       </div>
-      <span className="text-muted-foreground text-xs">
-        total check-ins
-        <span className="opacity-70">
-          {" "}
-          · last {days.length} days, to today
-        </span>
+      <span className="text-muted-foreground text-[13px]">
+        <span className="text-foreground tabular-nums">{total}</span> all time
       </span>
     </div>
   );
 }
 
-function StreakPill({ streak }: { streak: number }) {
+function SectionHeading({ title, count }: { title: string; count: number }) {
   return (
-    <span className="bg-success/12 text-success-ink flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5">
-      <Flame className="size-3.5" aria-hidden />
-      <span className="text-sm font-semibold tabular-nums">{streak}</span>
-      <span className="sr-only">day streak</span>
-    </span>
+    <h2 className="flex items-baseline gap-2.5 text-xl tracking-[-0.025em]">
+      {title}
+      <span className="text-muted-foreground text-sm tabular-nums">{count}</span>
+    </h2>
   );
 }
 
-function ProgressBar({
-  percent,
-  muted,
-  label,
-}: {
-  percent: number;
-  muted: boolean;
-  label?: string;
-}) {
+/**
+ * Row layout shared by owned and buddy challenges. Phone: title and action on
+ * top, chain and streak underneath. Desktop: one line, chain in its own column
+ * so the chains line up down the list.
+ */
+const ROW =
+  "relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-5 gap-y-3 px-5 py-4 [grid-template-areas:'title_action''chain_streak'] sm:px-6 md:grid-cols-[minmax(0,1fr)_13rem_5rem_auto] md:[grid-template-areas:'title_chain_streak_action'] hover:bg-muted/40 transition-colors first:rounded-t-3xl last:rounded-b-3xl";
+
+function StreakFigure({ streak, cadence }: { streak: number; cadence: string }) {
+  // "14 day streak", like "a 14-day run": the unit stays singular.
+  const { one } = periodNoun(cadence);
   return (
-    <div
-      className="bg-muted h-2 w-full overflow-hidden rounded-full"
-      role="progressbar"
-      aria-valuenow={percent}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label={label ?? "Progress"}
-    >
-      <div
-        className={cn(
-          "h-full rounded-full transition-all duration-700",
-          muted ? "bg-muted-foreground/40" : "bg-success",
-        )}
-        style={{ width: `${percent}%` }}
-      />
-    </div>
+    <p className="text-right leading-none [grid-area:streak]">
+      <span className="text-2xl tracking-[-0.04em] tabular-nums">{streak}</span>
+      <span className="text-muted-foreground mt-1 block text-[11px]">
+        {one} streak
+      </span>
+    </p>
   );
 }
 
 function ChallengeSection({
   title,
-  count,
   items,
   today,
   tone,
 }: {
   title: string;
-  count: number;
   items: OwnedCard[];
   today: string;
   tone: "due" | "calm" | "closed";
 }) {
   return (
-    <section className="mt-10 flex flex-col gap-4">
-      <h2 className="text-muted-foreground flex items-center gap-2 text-sm font-medium tracking-wide uppercase">
-        {title}
-        <span className="bg-muted text-muted-foreground rounded-full px-1.5 text-xs tabular-nums">
-          {count}
-        </span>
-      </h2>
-      <ul className="grid gap-4 sm:grid-cols-2">
+    <section className="mt-12">
+      <SectionHeading title={title} count={items.length} />
+      <ul className="border-border bg-card divide-border mt-3 divide-y rounded-3xl border">
         {items.map((o) => (
-          <li key={o.c.id}>
-            <ChallengeCard card={o} today={today} tone={tone} />
-          </li>
+          <ChallengeRowItem key={o.c.id} card={o} today={today} tone={tone} />
         ))}
       </ul>
     </section>
@@ -616,17 +516,14 @@ function ChallengeSection({
 /**
  * One owned challenge.
  *
- * The card answers the three questions that decide whether someone acts: how
- * far along am I, what happens if I don't, and who's watching. The stake and
- * the buddy were both already in the database and both only visible a click
- * away, which is exactly one click too far for the thing that supplies the
- * pressure.
- *
- * The title carries a stretched link over the whole card, so the card is still
- * one big target while the check-in button stays a separate control on top of
- * it (nesting a button inside an anchor is neither valid nor operable).
+ * The row answers the questions that decide whether someone acts: how is the
+ * run going (the chain and the streak), what happens if I don't (the stake),
+ * and who's watching. The title carries a stretched link over the whole row,
+ * so the row is one big target while the check-in button stays a separate
+ * control on top of it (a button inside an anchor is neither valid nor
+ * operable).
  */
-function ChallengeCard({
+function ChallengeRowItem({
   card,
   today,
   tone,
@@ -641,146 +538,132 @@ function ChallengeCard({
   // A cumulative goal needs a number before it can be logged, so those still
   // go through the detail page; everything else can be a single tap.
   const quickValue = ev.mode === "total" ? null : Math.max(1, c.daily_target);
+  const periods = schedulePeriods({
+    cadence: c.cadence,
+    cadenceWeekday: c.cadence_weekday,
+    startDate: c.start_date,
+    endDate: c.end_date,
+    today,
+  });
+
+  const when =
+    ev.status === "failed"
+      ? "ended short"
+      : ev.status === "won"
+        ? "completed"
+        : ev.status === "upcoming"
+          ? `starts ${formatDay(c.start_date)}`
+          : ev.daysRemaining !== null
+            ? `${ev.daysRemaining} day${ev.daysRemaining === 1 ? "" : "s"} left`
+            : null;
+
+  const progress =
+    ev.mode === "total"
+      ? `${formatCount(ev.totalLogged, c.target_unit)} of ${formatCount(ev.totalTarget ?? 0)}`
+      : ev.totalPeriods !== null
+        ? `${ev.donePeriods} of ${ev.totalPeriods}`
+        : null;
 
   return (
-    <Card
-      className={cn(
-        "hover:ring-primary/40 lift relative h-full hover:shadow-md",
-        tone === "due" && atRisk && "ring-warning/40",
-        tone === "closed" && "bg-card/60",
-      )}
-    >
-      <CardContent className="flex h-full flex-col gap-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <Link
-              href={`/challenges/${c.id}`}
-              className="rounded-sm leading-snug font-medium break-all hover:underline after:absolute after:inset-0"
-            >
-              {c.title}
-            </Link>
-            <p className="text-muted-foreground text-xs">
-              {cadenceLabel(c.cadence, c.cadence_weekday)}
-              {ev.status === "failed"
-                ? " · failed"
-                : ev.status === "won"
-                  ? " · done ✓"
-                  : ev.status === "upcoming"
-                    ? ` · starts ${formatDay(c.start_date)}`
-                    : ev.daysRemaining !== null
-                      ? ` · ${ev.daysRemaining} days left`
-                      : ""}
-            </p>
-          </div>
-          <StreakPill streak={ev.streak} />
-        </div>
-
-        {/* What's on the line. The reason any of this works, so it stops being
-            a detail-page-only fact. */}
-        {c.stake_text && (
-          <p className="flex items-start gap-1.5 text-xs">
-            {/* Amber: the stake is the nudge, and it shares its colour with
-                every other nudge in the app. */}
-            <HandCoins
-              className={cn(
-                "mt-px size-3.5 shrink-0",
-                tone === "closed" ? "text-muted-foreground" : "text-cheer-ink",
-              )}
-              aria-hidden
-            />
-            <span className="min-w-0 line-clamp-1 break-all">
-              <span className="text-muted-foreground">On the line: </span>
-              <span className="font-medium">{c.stake_text}</span>
-            </span>
-          </p>
-        )}
-
-        {ev.percent !== null && (
-          <div className="flex flex-col gap-1.5">
-            <ProgressBar
-              percent={ev.percent}
-              muted={ev.status === "failed"}
-              label={`${c.title} progress`}
-            />
-            <div className="text-muted-foreground flex items-center justify-between gap-2 text-xs">
-              <span className="tabular-nums">
-                {ev.mode === "total"
-                  ? `${formatCount(ev.totalLogged, c.target_unit)} of ${formatCount(ev.totalTarget ?? 0)}`
-                  : `${ev.donePeriods}/${ev.totalPeriods} check-ins`}
-              </span>
-              {atRisk ? (
-                <span className="text-warning-ink font-medium">No skips left</span>
-              ) : ev.skipsLeft !== null && ev.status === "active" ? (
-                <span className="tabular-nums">
-                  {ev.skipsLeft} skip{ev.skipsLeft === 1 ? "" : "s"} left
-                </span>
-              ) : null}
-            </div>
-          </div>
-        )}
-
-        {/* Who's watching, and the one action worth taking. */}
-        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-          <BuddyChip
-            hasBuddy={hasBuddy}
-            cheers={cheers}
-            quiet={tone === "closed"}
-          />
-
-          {ev.status === "won" ? (
-            <span className="text-success-ink inline-flex shrink-0 items-center gap-1 text-xs font-medium">
-              <Trophy className="size-3.5" aria-hidden />
-              Completed
-            </span>
-          ) : ev.status === "failed" ? (
-            <span className="text-muted-foreground shrink-0 text-xs font-medium">
-              Ended short
-            </span>
-          ) : ev.status === "upcoming" ? (
-            <span className="text-muted-foreground shrink-0 text-xs">
-              Not started
-            </span>
-          ) : !ev.dueNow ? (
-            <span className="text-success-ink inline-flex shrink-0 items-center gap-1 text-xs font-medium">
-              <CheckCircle2 className="size-3.5" aria-hidden />
-              {loggedToday ? "Logged today" : "Covered"}
-            </span>
-          ) : quickValue !== null ? (
-            <div className="relative z-10 shrink-0">
-              <QuickLog
-                challengeId={c.id}
-                value={quickValue}
-                streak={ev.streak}
-                // Deliberately no unit: the card title already says what's
-                // being counted, and a long label pushes the buddy line off
-                // the edge of a phone.
-                label={
-                  ev.mode === "each"
-                    ? `Log ${c.daily_target.toLocaleString("en-US")}`
-                    : "Log now"
-                }
-              />
-            </div>
-          ) : (
-            <Button size="sm" variant="outline" className="relative z-10 shrink-0" asChild>
-              <Link href={`/challenges/${c.id}`}>
-                Log now
-                <ArrowRight className="size-3.5" aria-hidden />
-              </Link>
-            </Button>
+    <li className={cn(ROW, tone === "closed" && "text-muted-foreground")}>
+      <div className="min-w-0 [grid-area:title]">
+        <Link
+          href={`/challenges/${c.id}`}
+          className={cn(
+            "rounded-sm text-[17px] leading-snug tracking-[-0.015em] break-words after:absolute after:inset-0 hover:underline",
+            tone !== "closed" && "text-foreground",
           )}
-        </div>
-      </CardContent>
-    </Card>
+        >
+          {c.title}
+        </Link>
+        <p className="text-muted-foreground mt-0.5 text-[13px] text-pretty">
+          {[cadenceLabel(c.cadence, c.cadence_weekday), when, progress]
+            .filter(Boolean)
+            .join(" · ")}
+          {atRisk && (
+            <span className="text-warning-ink font-medium"> · no skips left</span>
+          )}
+          {!atRisk && ev.skipsLeft !== null && ev.status === "active" && (
+            <span>
+              {" "}
+              · {ev.skipsLeft} skip{ev.skipsLeft === 1 ? "" : "s"} left
+            </span>
+          )}
+        </p>
+        {/* What's on the line, and who's watching: the two things that supply
+            the pressure, so they sit on the row, not a click away. */}
+        <p className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[13px]">
+          {c.stake_text && (
+            <span className="min-w-0 line-clamp-1 break-all">
+              <span
+                className={tone === "closed" ? "" : "text-cheer-ink font-medium"}
+              >
+                Stake:
+              </span>{" "}
+              {c.stake_text}
+            </span>
+          )}
+          <BuddyLine hasBuddy={hasBuddy} cheers={cheers} quiet={tone === "closed"} />
+        </p>
+      </div>
+
+      <MiniChain
+        periods={periods}
+        done={new Set(dates)}
+        today={today}
+        className={cn("[grid-area:chain]", tone === "closed" && "opacity-60")}
+      />
+
+      <StreakFigure streak={ev.streak} cadence={c.cadence} />
+
+      <div className="relative z-10 self-start justify-self-end [grid-area:action] md:self-center">
+        {ev.status === "won" ? (
+          <span className="text-success-ink inline-flex items-center gap-1 text-sm font-medium">
+            <Trophy className="size-4" aria-hidden />
+            Won
+          </span>
+        ) : ev.status === "failed" ? (
+          <span className="text-sm">Ended</span>
+        ) : ev.status === "upcoming" ? (
+          <span className="text-muted-foreground text-sm">Not started</span>
+        ) : !ev.dueNow ? (
+          <span className="text-success-ink inline-flex items-center gap-1 text-sm font-medium">
+            <CheckCircle2 className="size-4" aria-hidden />
+            {loggedToday ? "Logged" : "Covered"}
+          </span>
+        ) : quickValue !== null ? (
+          <QuickLog
+            challengeId={c.id}
+            value={quickValue}
+            streak={ev.streak}
+            // Deliberately no unit: the title already says what's being
+            // counted, and a long label crowds a phone-width row.
+            label={
+              ev.mode === "each"
+                ? `Log ${c.daily_target.toLocaleString("en-US")}`
+                : "Log today"
+            }
+          />
+        ) : (
+          <Button size="sm" variant="outline" asChild>
+            <Link href={`/challenges/${c.id}`}>
+              Log
+              <ArrowRight className="size-3.5" aria-hidden />
+            </Link>
+          </Button>
+        )}
+      </div>
+    </li>
   );
 }
 
 /**
- * Accountability, stated. "No buddy yet" is deliberately a live prompt rather
- * than a grey fact — an unwitnessed challenge is the one most likely to be
- * quietly dropped.
+ * Accountability, stated. The owner can see whether a buddy has claimed the
+ * invite and how many reactions came in, never the buddy's name: `users` is
+ * self-read only. "Invite a buddy" is a live prompt rather than a grey fact,
+ * because an unwitnessed challenge is the one most likely to be dropped.
  */
-function BuddyChip({
+function BuddyLine({
   hasBuddy,
   cheers,
   quiet,
@@ -790,31 +673,20 @@ function BuddyChip({
   quiet: boolean;
 }) {
   return (
-    <span className="inline-flex min-w-0 items-center gap-2.5 text-xs">
+    <span className="text-muted-foreground inline-flex items-center gap-1.5">
       {hasBuddy ? (
-        <span className="text-muted-foreground inline-flex items-center gap-1">
-          <Users className="size-3.5" aria-hidden />
-          Buddy watching
-        </span>
+        "Buddy watching"
       ) : (
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 font-medium",
-            quiet ? "text-muted-foreground" : "text-primary",
-          )}
-        >
-          <UserPlus className="size-3.5" aria-hidden />
-          Invite a buddy
+        <span className={cn("font-medium", !quiet && "text-primary")}>
+          No buddy yet
         </span>
       )}
       {cheers > 0 && (
-        <span className="text-muted-foreground inline-flex items-center gap-1">
-          <Heart className="size-3.5" aria-hidden />
+        <span className="inline-flex items-center gap-1">
+          · <Heart className="size-3" aria-hidden />
           <span className="tabular-nums">{cheers}</span>
           <span className="sr-only">
-            {/* The heart icon stands for any reaction type (cheer, nudge,
-                note) — labelling it "cheer" told screen-reader users a nudge
-                was praise. */}
+            {/* The heart stands for any reaction type (cheer, nudge, note). */}
             reaction{cheers === 1 ? "" : "s"} from your buddy
           </span>
         </span>

@@ -39,7 +39,7 @@ export default async function NewChallengePage() {
         </Link>
 
         <div className="mt-6 flex flex-col gap-1.5">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="text-[clamp(2.25rem,5vw,3.25rem)] leading-none tracking-[-0.045em] text-balance">
             New challenge
           </h1>
           <p className="text-muted-foreground text-pretty">
@@ -48,7 +48,7 @@ export default async function NewChallengePage() {
           </p>
         </div>
 
-        <div className="bg-card ring-foreground/10 mt-8 rounded-2xl p-5 ring-1 sm:p-6">
+        <div className="bg-card border-border mt-8 rounded-3xl border p-5 sm:p-7">
           <CreateChallengeForm today={todayISO()} />
         </div>
 

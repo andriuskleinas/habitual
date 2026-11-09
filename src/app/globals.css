@@ -307,8 +307,8 @@
     background-image: linear-gradient(
       to top right,
       transparent calc(50% - 0.75px),
-      color-mix(in oklch, var(--destructive), transparent 25%) calc(50% - 0.75px),
-      color-mix(in oklch, var(--destructive), transparent 25%) calc(50% + 0.75px),
+      color-mix(in oklch, var(--destructive), transparent 50%) calc(50% - 0.75px),
+      color-mix(in oklch, var(--destructive), transparent 50%) calc(50% + 0.75px),
       transparent calc(50% + 0.75px)
     );
   }

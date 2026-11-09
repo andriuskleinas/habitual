@@ -42,7 +42,7 @@ export default async function SignupPage({
         className="flex flex-1 items-center justify-center px-5 py-10 sm:px-8"
       >
         <div className="w-full max-w-sm">
-          <div className="bg-card ring-foreground/10 rounded-2xl p-6 shadow-sm ring-1 sm:p-8">
+          <div className="bg-card border-border rounded-3xl border p-6 sm:p-8">
             <SignupForm next={target} />
           </div>
 

@@ -1,5 +1,3 @@
-import { Hand, MessageCircle, PartyPopper, Trophy } from "lucide-react";
-
 export type ReactionItem = {
   type: string;
   message: string | null;
@@ -7,14 +5,11 @@ export type ReactionItem = {
   created_at: string;
 };
 
-const META: Record<
-  string,
-  { icon: React.ComponentType<{ className?: string }>; verb: string }
-> = {
-  cheer: { icon: PartyPopper, verb: "cheered" },
-  nudge: { icon: Hand, verb: "nudged" },
-  reward: { icon: Trophy, verb: "sent a reward" },
-  note: { icon: MessageCircle, verb: "left a note" },
+const VERB: Record<string, string> = {
+  cheer: "cheered",
+  nudge: "nudged",
+  reward: "sent a reward",
+  note: "left a note",
 };
 
 function timeAgo(iso: string): string {
@@ -33,33 +28,35 @@ export function ReactionsFeed({ reactions }: { reactions: ReactionItem[] }) {
   if (reactions.length === 0) return null;
 
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="divide-border flex flex-col divide-y">
       {reactions.slice(0, 20).map((r, i) => {
-        const meta = META[r.type] ?? META.note;
-        const Icon = meta.icon;
+        const verb = VERB[r.type] ?? VERB.note;
         const who = r.from_name ?? "Someone";
         return (
           <li
             key={`${r.created_at}-${i}`}
-            className="ring-foreground/10 flex items-start gap-3 rounded-lg px-3 py-2.5 ring-1"
+            className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
           >
             {/* Amber: a cheer or a nudge is your buddy's voice, and it wears
                 the same colour everywhere it appears. */}
-            <div className="bg-cheer/20 text-cheer-ink flex size-8 shrink-0 items-center justify-center rounded-lg">
-              <Icon className="size-4" />
-            </div>
-            <div className="flex min-w-0 flex-col">
+            <span
+              className="bg-pastel-amber text-pastel-foreground flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium uppercase"
+              aria-hidden
+            >
+              {who.slice(0, 1)}
+            </span>
+            <div className="flex min-w-0 flex-col gap-0.5">
               <p className="text-sm">
                 <span className="font-medium">{who}</span>{" "}
-                <span className="text-muted-foreground">{meta.verb}</span>
-                <span className="text-muted-foreground">
+                <span className="text-cheer-ink">{verb}</span>
+                <span className="text-muted-foreground text-xs">
                   {" · "}
                   {timeAgo(r.created_at)}
                 </span>
               </p>
               {r.message && (
-                <p className="text-muted-foreground text-sm text-pretty break-all">
-                  “{r.message}”
+                <p className="text-muted-foreground text-sm text-pretty break-words">
+                  {r.message}
                 </p>
               )}
             </div>

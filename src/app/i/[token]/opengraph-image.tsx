@@ -7,7 +7,7 @@ import {
   todayISO,
 } from "@/lib/challenges";
 import { fetchInviteCard } from "@/lib/invite";
-import { BRAND_GRADIENT, LOGO_PATH, LOGO_VIEWBOX } from "@/lib/logo";
+import { INK, INK_FOREGROUND, LOGO_PATH, LOGO_VIEWBOX, SUCCESS } from "@/lib/logo";
 
 export const alt = "A challenge on Habitual";
 export const size = { width: 1200, height: 630 };
@@ -20,7 +20,7 @@ export const contentType = "image/png";
  */
 export const revalidate = 300;
 
-const BG = BRAND_GRADIENT;
+const BG = INK;
 const DIM = "rgba(255,255,255,0.82)";
 
 /** Longest run of cells that still reads as a chain rather than a texture. */
@@ -144,18 +144,18 @@ export default async function InviteOpengraphImage({
                 width: "52px",
                 height: "52px",
                 borderRadius: "15px",
-                background: "rgba(255,255,255,0.18)",
+                background: INK_FOREGROUND,
               }}
             >
-              <svg viewBox={LOGO_VIEWBOX} width={28} height={29} fill="#fff">
+              <svg viewBox={LOGO_VIEWBOX} width={28} height={29} fill={INK}>
                 <path d={LOGO_PATH} />
               </svg>
             </div>
             <div
               style={{
                 fontSize: "31px",
-                fontWeight: 600,
-                letterSpacing: "-0.02em",
+                fontWeight: 500,
+                letterSpacing: "-0.03em",
               }}
             >
               Habitual
@@ -168,7 +168,7 @@ export default async function InviteOpengraphImage({
               alignItems: "center",
               padding: "10px 22px",
               borderRadius: "999px",
-              background: "rgba(255,255,255,0.18)",
+              background: "rgba(255,255,255,0.12)",
               fontSize: "24px",
               fontWeight: 600,
               letterSpacing: "0.06em",
@@ -188,9 +188,9 @@ export default async function InviteOpengraphImage({
             style={{
               display: "flex",
               fontSize: "70px",
-              fontWeight: 700,
-              lineHeight: 1.05,
-              letterSpacing: "-0.035em",
+              fontWeight: 400,
+              lineHeight: 1,
+              letterSpacing: "-0.05em",
               maxWidth: "1000px",
             }}
           >
@@ -223,7 +223,7 @@ export default async function InviteOpengraphImage({
                 marginTop: "6px",
                 padding: "16px 24px",
                 borderRadius: "18px",
-                background: "rgba(255,255,255,0.14)",
+                background: "rgba(255,255,255,0.08)",
                 maxWidth: "1000px",
               }}
             >
@@ -259,10 +259,10 @@ export default async function InviteOpengraphImage({
                   height: `${cellSize}px`,
                   borderRadius: "7px",
                   background: filled
-                    ? "white"
+                    ? SUCCESS
                     : isPast
-                      ? "rgba(255,140,140,0.5)"
-                      : "rgba(255,255,255,0.22)",
+                      ? "rgba(255,140,140,0.35)"
+                      : "rgba(255,255,255,0.14)",
                   border: isNow && !filled ? "3px solid white" : "none",
                 }}
               />
@@ -299,14 +299,14 @@ function Fallback() {
         style={{
           display: "flex",
           fontSize: "68px",
-          fontWeight: 700,
-          letterSpacing: "-0.03em",
+          fontWeight: 400,
+          letterSpacing: "-0.05em",
         }}
       >
         This invite has expired.
       </div>
       <div style={{ display: "flex", fontSize: "30px", color: DIM }}>
-        Ask your friend for a fresh link — or start a challenge of your own.
+        Ask your friend for a fresh link, or start a challenge of your own.
       </div>
     </div>
   );

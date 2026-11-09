@@ -56,7 +56,7 @@ export function ThemePicker() {
     <fieldset className="flex flex-col gap-2.5">
       <legend className="sr-only">Theme</legend>
       <div
-        className="bg-muted/60 grid grid-cols-3 gap-1 rounded-xl p-1"
+        className="bg-muted/60 grid grid-cols-3 gap-1 rounded-full p-1"
         // Until mount we don't know which is active; dimming avoids flashing
         // the wrong selection.
         aria-busy={choice === null}
@@ -67,12 +67,13 @@ export function ThemePicker() {
             <label
               key={value}
               className={cn(
-                "flex cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                "has-[:focus-visible]:outline-ring has-[:focus-visible]:rounded-lg has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2",
-                // Brand fill rather than a raised surface: on a dark card a
+                "flex cursor-pointer items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-colors",
+                "has-[:focus-visible]:outline-ring has-[:focus-visible]:rounded-full has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2",
+                // Inverted pill rather than a raised surface: on a dark card a
                 // "lifted" chip is darker than its track, which reads inverted.
+                // Foreground-on-background flips cleanly in both themes.
                 active
-                  ? "bg-primary/15 text-primary ring-primary/30 ring-1"
+                  ? "bg-foreground text-background"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >

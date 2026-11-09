@@ -108,11 +108,11 @@ export function LoginForm({
   if (status === "sent") {
     return (
       <div className="flex flex-col items-center gap-4 text-center">
-        <span className="bg-success/10 text-success-ink flex size-14 items-center justify-center rounded-2xl">
+        <span className="bg-success/10 text-success-ink flex size-12 items-center justify-center rounded-full">
           <MailCheck className="size-7" aria-hidden />
         </span>
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-2xl font-bold tracking-tight">Check your email</h1>
+          <h1 className="text-3xl leading-tight tracking-[-0.04em] text-balance">Check your email</h1>
           <p className="text-muted-foreground text-pretty">
             We sent a magic link to{" "}
             <span className="text-foreground font-medium break-all">{email}</span>
@@ -146,14 +146,14 @@ export function LoginForm({
             rather than a toll gate. */}
         {pendingEmoji && (
           <span
-            className="bg-primary/10 mb-1 flex size-14 items-center justify-center rounded-2xl text-3xl"
+            className="bg-pastel-amber mb-1 flex size-14 items-center justify-center rounded-full text-3xl"
             aria-hidden
           >
             {pendingEmoji}
           </span>
         )}
         {/* "Welcome back" is wrong for a first-time buddy following an invite. */}
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-3xl leading-tight tracking-[-0.04em] text-balance">
           {pendingEmoji
             ? "One step and it's sent"
             : fromInvite
@@ -170,7 +170,7 @@ export function LoginForm({
       </div>
 
       {signedOutForInactivity && (
-        <p className="text-muted-foreground ring-foreground/10 flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm ring-1">
+        <p className="text-muted-foreground bg-muted/60 flex items-start gap-2.5 rounded-2xl px-4 py-3 text-sm">
           <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
           Signed out after a while away. Sign back in to pick up where you
           left off.
@@ -181,7 +181,7 @@ export function LoginForm({
       <div
         role="tablist"
         aria-label="Sign-in method"
-        className="bg-muted flex gap-1 rounded-lg p-1"
+        className="bg-muted flex gap-1 rounded-full p-1"
       >
         {(
           [
@@ -199,9 +199,9 @@ export function LoginForm({
               setError(null);
             }}
             className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              "flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
               mode === value
-                ? "bg-background text-foreground shadow-sm"
+                ? "bg-foreground text-background"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >

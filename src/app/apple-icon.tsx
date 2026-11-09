@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { BRAND_FROM, BRAND_TO, LOGO_PATH, LOGO_VIEWBOX } from "@/lib/logo";
+import { INK, INK_FOREGROUND, LOGO_PATH, LOGO_VIEWBOX } from "@/lib/logo";
 
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
@@ -19,10 +19,10 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: `linear-gradient(135deg, ${BRAND_FROM} 0%, ${BRAND_TO} 100%)`,
+          background: INK,
         }}
       >
-        <svg viewBox={LOGO_VIEWBOX} width={93} height={96} fill="#fff">
+        <svg viewBox={LOGO_VIEWBOX} width={93} height={96} fill={INK_FOREGROUND}>
           <path d={LOGO_PATH} />
         </svg>
       </div>

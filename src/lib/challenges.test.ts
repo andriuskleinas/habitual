@@ -12,6 +12,8 @@ import {
   addDays,
   addMonths,
   evaluateChallenge,
+  periodStates,
+  recentWindow,
   resolveSkipsAllowed,
   resolveStartDate,
   schedulePeriods,
@@ -188,4 +190,45 @@ test("weekly streaks count weeks, not days", () => {
   assert.equal(ev.streak, 3);
   assert.equal(ev.dueNow, true);
   assert.equal(ev.totalPeriods, 4);
+});
+
+/* ------------------------------ chain states ------------------------------ */
+
+test("periodStates marks kept, missed, the open slot and what's ahead", () => {
+  const periods = schedulePeriods({
+    cadence: "daily",
+    startDate: MON,
+    endDate: addDays(MON, 5),
+    today: addDays(MON, 3),
+  });
+  const states = periodStates(periods, [MON, addDays(MON, 2)], addDays(MON, 3));
+  assert.deepEqual(states, ["kept", "missed", "kept", "now", "upcoming", "upcoming"]);
+});
+
+test("periodStates fills a weekly block from any check-in inside it", () => {
+  const periods = schedulePeriods({
+    cadence: "weekly",
+    startDate: MON,
+    endDate: addDays(MON, 20),
+    today: addDays(MON, 9),
+  });
+  const states = periodStates(periods, [addDays(MON, 4)], addDays(MON, 9));
+  assert.deepEqual(states, ["kept", "now", "upcoming"]);
+});
+
+test("recentWindow ends on the current period, padding young challenges", () => {
+  const periods = schedulePeriods({
+    cadence: "daily",
+    startDate: MON,
+    endDate: addDays(MON, 29),
+    today: addDays(MON, 19),
+  });
+  const idx = periods.map((_, i) => i);
+  // Day 20 of 30: the 14 periods ending with today (indices 6..19).
+  assert.deepEqual(recentWindow(periods, idx, addDays(MON, 19)), [
+    6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+  ]);
+  // Day 3: the first 14, today third, the rest upcoming.
+  assert.deepEqual(recentWindow(periods, idx, addDays(MON, 2)).length, 14);
+  assert.equal(recentWindow(periods, idx, addDays(MON, 2))[0], 0);
 });
