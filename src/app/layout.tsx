@@ -88,7 +88,7 @@ export default function RootLayout({
         {/* First tab stop: lets keyboard users jump the nav on every page. */}
         <a
           href="#main"
-          className="bg-primary text-primary-foreground focus-visible:ring-ring sr-only rounded-lg px-4 py-2 text-sm font-medium focus-visible:not-sr-only focus-visible:fixed focus-visible:top-3 focus-visible:left-3 focus-visible:z-100"
+          className="bg-foreground text-background focus-visible:ring-ring sr-only rounded-lg px-4 py-2 text-sm font-medium focus-visible:not-sr-only focus-visible:fixed focus-visible:top-3 focus-visible:left-3 focus-visible:z-100"
         >
           Skip to content
         </a>

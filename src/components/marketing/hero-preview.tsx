@@ -87,7 +87,7 @@ export function HeroPreview({ className }: { className?: string }) {
           className={
             checked
               ? "bg-success animate-cell-pop aspect-square rounded-[4px]"
-              : "ring-primary aspect-square rounded-[4px] ring-[1.5px] ring-inset"
+              : "ring-foreground aspect-square rounded-[4px] ring-[1.5px] ring-inset"
           }
         />
       </div>

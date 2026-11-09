@@ -7,7 +7,7 @@ import {
   todayISO,
 } from "@/lib/challenges";
 import { fetchInviteCard } from "@/lib/invite";
-import { INK, INK_FOREGROUND, LOGO_PATH, LOGO_VIEWBOX, SUCCESS } from "@/lib/logo";
+import { INK, INK_FOREGROUND, LOGO_PATH, LOGO_VIEWBOX, MISS, SUCCESS } from "@/lib/logo";
 
 export const alt = "A challenge on Habitual";
 export const size = { width: 1200, height: 630 };
@@ -261,7 +261,7 @@ export default async function InviteOpengraphImage({
                   background: filled
                     ? SUCCESS
                     : isPast
-                      ? "rgba(255,140,140,0.35)"
+                      ? MISS
                       : "rgba(255,255,255,0.14)",
                   border: isNow && !filled ? "3px solid white" : "none",
                 }}

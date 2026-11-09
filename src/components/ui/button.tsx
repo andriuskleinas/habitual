@@ -11,10 +11,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Deepen on hover rather than fading to 80% opacity, which read as a
-        // washed-out "disabled" state against a white page.
+        // Ink, like the logo and the type: the page's loudest colours belong
+        // to the data (green kept days, red misses, amber stakes), so the
+        // main action is black, not a fourth hue. Inverts in dark mode.
+        // Lightens on hover rather than fading, which read as "disabled".
         default:
-          "bg-primary text-primary-foreground shadow-sm hover:bg-[color-mix(in_oklch,var(--primary),black_10%)] dark:hover:bg-[color-mix(in_oklch,var(--primary),white_10%)]",
+          "bg-foreground text-background shadow-sm hover:bg-[color-mix(in_oklch,var(--foreground),var(--background)_18%)]",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:

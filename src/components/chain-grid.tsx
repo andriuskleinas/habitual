@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils";
  * everywhere in the app (landing demo, dashboard rows, detail and buddy views).
  *
  *   kept      solid green
- *   missed    outlined, struck through (`.cell-missed`)
- *   now       outlined in indigo: the one slot you can still fill
+ *   missed    solid red (`.cell-missed`)
+ *   now       outlined in ink: the one slot you can still fill
  *   upcoming  hairline outline
  *
  * Decorative: the same numbers are always stated in text nearby, so the cells
@@ -24,18 +24,9 @@ import { cn } from "@/lib/utils";
  */
 const CELL: Record<PeriodState, string> = {
   kept: "bg-success text-white/90",
-  missed: "cell-missed text-muted-foreground",
-  now: "ring-primary text-primary ring-2 ring-inset font-semibold",
+  missed: "cell-missed text-white/90",
+  now: "ring-foreground text-foreground ring-2 ring-inset font-semibold",
   upcoming: "ring-border text-muted-foreground ring-1 ring-inset",
-};
-
-/**
- * At row size a diagonal stroke turns into noise: a run of misses reads as a
- * hatched texture rather than as missed days. Small chains fill a miss with a
- * faint red instead; the full calendar keeps the stroke, where it's legible.
- */
-const CELL_COMPACT: Partial<Record<PeriodState, string>> = {
-  missed: "bg-destructive/15",
 };
 
 /** Calendars past this many weeks get too tall; longer runs use the grid. */
@@ -189,7 +180,7 @@ export function MiniChain({
       {states.map((s, i) => (
         <span
           key={i}
-          className={cn("aspect-square rounded-[3px]", CELL_COMPACT[s] ?? CELL[s])}
+          className={cn("aspect-square rounded-[3px]", CELL[s])}
         />
       ))}
       {/* Pad short schedules so every row's chain is the same width. */}

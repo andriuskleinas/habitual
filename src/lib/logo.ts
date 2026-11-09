@@ -73,3 +73,6 @@ export const INK_FOREGROUND = "#FCFCFC";
 
 /** `--success` as hex, for the share cards' chain (kept days are green). */
 export const SUCCESS = "#2FA76A";
+
+/** `--miss` (dark-mode value, since the cards are on ink) as hex. */
+export const MISS = "#CA5551";
