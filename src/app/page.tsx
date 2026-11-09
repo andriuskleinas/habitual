@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { HeroCarousel } from "@/components/marketing/hero-carousel";
 import {
   LinkDemo,
@@ -9,7 +10,6 @@ import {
   StakeDemo,
 } from "@/components/marketing/step-demos";
 import { Faq, FAQS } from "@/components/marketing/faq";
-import { LogoGlyph } from "@/components/brand";
 import { Reveal } from "@/components/reveal";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -314,34 +314,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="band-ink border-ink-line border-t">
-        <div className="text-ink-subtle mx-auto flex w-full max-w-6xl flex-col items-center gap-4 px-5 py-8 text-sm sm:flex-row sm:justify-between sm:px-8">
-          <div className="text-ink-foreground flex items-center gap-2">
-            <LogoGlyph className="h-4 w-auto shrink-0" />
-            <span className="tracking-[-0.02em]">Habitual</span>
-          </div>
-          <nav aria-label="Footer" className="flex items-center gap-6">
-            <a
-              href="#how-it-works"
-              className="hover:text-ink-foreground rounded-sm transition-colors"
-            >
-              How it works
-            </a>
-            <a
-              href="#faq"
-              className="hover:text-ink-foreground rounded-sm transition-colors"
-            >
-              FAQ
-            </a>
-            <Link
-              href="/login"
-              className="hover:text-ink-foreground rounded-sm transition-colors"
-            >
-              Sign in
-            </Link>
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter />
 
       <script
         type="application/ld+json"
