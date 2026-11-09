@@ -63,6 +63,7 @@
   --color-cheer-ink: var(--warning-ink);
   --color-brand-from: var(--brand-from);
   --color-brand-to: var(--brand-to);
+  --color-miss: var(--miss);
   --color-ink: var(--ink);
   --color-ink-foreground: var(--ink-foreground);
   --color-ink-muted: var(--ink-muted);
@@ -83,9 +84,13 @@
    makes a screen readable at a glance — indigo is never "done", green is never
    a button you haven't earned.
 
-     Deep indigo  #344EAD  oklch(0.46 0.155 268)  structure, navigation, brand
+     Deep indigo  #344EAD  oklch(0.46 0.155 268)  links, focus, navigation
      Fresh green  #2FA76A  oklch(0.648 0.139 156) check-ins, streaks, progress
      Soft amber   #F5B942  oklch(0.821 0.147 80)  reminders, cheers, milestones
+
+   Buttons and the logo are ink (`--foreground` / `--background`), not one of
+   the three: the hues belong to the data, so the main action doesn't compete
+   with a kept day or a stake. A missed day is `--miss`, a solid red.
 
    `*-ink` exists because the brand green and amber are *fill* colours: at their
    given lightness they clear 3:1 (icons, bars, large type) but not the 4.5:1 a
@@ -148,6 +153,10 @@
   --ink-subtle: oklch(0.66 0.03 268);
   --ink-line: oklch(1 0 0 / 10%);
   --ink-accent: oklch(0.86 0.1 156);
+  /* A missed day: a calm, solid red. Its own token because mixing
+     --destructive with the indigo-tinted background in oklch swings the hue
+     to pink. */
+  --miss: oklch(0.68 0.15 25);
   --pastel-lavender: oklch(0.91 0.04 290);
   --pastel-amber: oklch(0.92 0.08 88);
   --pastel-sky: oklch(0.9 0.05 255);
@@ -202,6 +211,7 @@
   /* A shade below the dark page background, so the band still reads as a
      band for a signed-in visitor who has chosen dark mode. */
   --ink: oklch(0.13 0.02 268);
+  --miss: oklch(0.6 0.15 25);
   --pastel-lavender: oklch(0.3 0.06 290);
   --pastel-amber: oklch(0.32 0.05 85);
   --pastel-sky: oklch(0.3 0.05 255);
@@ -300,17 +310,11 @@
     --ring: var(--ink-foreground);
   }
 
-  /* A missed slot in a chain: an empty outlined cell with one diagonal stroke,
-     so a miss reads as a miss and not as a day still to come. */
+  /* A missed slot in a chain: a solid red square, softened toward the page
+     background so a long run of misses doesn't shout over the kept days. A
+     struck-through outline was tried first and read as hatching. */
   .cell-missed {
-    box-shadow: inset 0 0 0 1.5px var(--border);
-    background-image: linear-gradient(
-      to top right,
-      transparent calc(50% - 0.75px),
-      color-mix(in oklch, var(--destructive), transparent 50%) calc(50% - 0.75px),
-      color-mix(in oklch, var(--destructive), transparent 50%) calc(50% + 0.75px),
-      transparent calc(50% + 0.75px)
-    );
+    background-color: var(--miss);
   }
 
   /* A chain cell landing: the hero demo's chain filling in on load, and the

@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
  * so a streak of 11 would read as "ll". Sections alternate between the ink band and the page
  * background instead of being boxed.
  *
- * Colour still carries the app's meaning: indigo is an action, green is a kept
+ * Colour still carries the app's meaning: buttons are ink, green is a kept
  * day, amber is the stake. The pastels are illustration surfaces only.
  */
 

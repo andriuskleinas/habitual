@@ -55,11 +55,14 @@ here and no bundled docs to consult.
   nothing stored `ThemeScript` follows the OS *only if a session cookie is
   present*, so anonymous visitors always get light. Don't add a theme toggle to
   a public page.
-- **Three brand colours, each with one job** (defined in `globals.css`):
-  indigo `--primary` for structure, navigation and CTAs; green `--success` for
-  check-ins, streaks and progress; amber `--warning` (aliased `--cheer` where a
-  cheer, not a warning, is meant) for stakes, nudges and milestones. A progress
-  bar is never indigo and a button is never green.
+- **Buttons and the logo are ink, the hues belong to the data** (all in
+  `globals.css`). The default `Button` is `bg-foreground`/`text-background`
+  (inverts in dark mode); the logo tile takes its surface's text colour.
+  Indigo `--primary` is for links, focus rings and navigation; green
+  `--success` for check-ins, streaks and progress; amber `--warning` (aliased
+  `--cheer` where a cheer, not a warning, is meant) for stakes, nudges and
+  milestones; red `--miss` for a missed day. A progress bar is never indigo
+  and a button is never green.
 - **`--success` / `--warning` fill shapes; `--success-ink` / `--warning-ink` set
   type.** The brand green and amber clear 3:1 (icons, bars, large text) but not
   the 4.5:1 body copy needs. `text-success` on a page background fails contrast —
